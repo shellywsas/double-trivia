@@ -4,8 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>דאבל טריוויה - המהדורה המקצועית</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎯</text></svg>">
     <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;700;900&display=swap" rel="stylesheet">
+    
+    <script src="config.js"></script>
+
     <style>
         :root {
             --primary: #4a4a4a;
@@ -78,26 +80,13 @@
 
         #game-container { display: none; flex-direction: column; width: 100%; height: 100%; padding: 10px; box-sizing: border-box; }
 
-        /* כפתורי שליטה (חזור והשתק) */
-        #top-controls {
-            display: flex; justify-content: space-between; width: 100%; max-width: 1500px; margin: 0 auto 10px auto;
-        }
-        .control-btn {
-            background: #8e24aa; color: white; border: none; padding: 8px 20px; border-radius: 12px; 
-            cursor: pointer; font-weight: bold; font-size: 1.1rem; box-shadow: 0 4px 0 rgba(0,0,0,0.2); transition: transform 0.1s;
-        }
+        #top-controls { display: flex; justify-content: space-between; width: 100%; max-width: 1500px; margin: 0 auto 10px auto; }
+        .control-btn { background: #8e24aa; color: white; border: none; padding: 8px 20px; border-radius: 12px; cursor: pointer; font-weight: bold; font-size: 1.1rem; box-shadow: 0 4px 0 rgba(0,0,0,0.2); transition: transform 0.1s; }
         .control-btn:active { transform: translateY(4px); box-shadow: 0 0 0 rgba(0,0,0,0); }
         .control-btn.muted { background: #ef5350; }
 
-        #scoreboard {
-            display: flex; justify-content: center; align-items: center;
-            min-height: 10vh; background: var(--glass-bg); backdrop-filter: blur(10px);
-            border-radius: 20px; margin-bottom: 10px; padding: 10px; flex-wrap: wrap; gap: 10px; border: 2px solid white;
-        }
-        .team-score {
-            text-align: center; font-size: 1.2rem; font-weight: bold; padding: 5px 15px;
-            border-radius: 15px; border: 4px solid transparent; opacity: 0.6; transition: all 0.3s; flex: 1; min-width: 80px; max-width: 200px;
-        }
+        #scoreboard { display: flex; justify-content: center; align-items: center; min-height: 10vh; background: var(--glass-bg); backdrop-filter: blur(10px); border-radius: 20px; margin-bottom: 10px; padding: 10px; flex-wrap: wrap; gap: 10px; border: 2px solid white; }
+        .team-score { text-align: center; font-size: 1.2rem; font-weight: bold; padding: 5px 15px; border-radius: 15px; border: 4px solid transparent; opacity: 0.6; transition: all 0.3s; flex: 1; min-width: 80px; max-width: 200px; }
         .team-score.active { border-color: var(--active-team); opacity: 1; transform: scale(1.05); background: white; box-shadow: 0 10px 20px rgba(255, 202, 40, 0.3); }
         .team-score span { display: block; font-size: 2rem; font-weight: 900; color: var(--card-bg); }
         .streak-icon { font-size: 1rem; color: #ff5722; display: none; }
@@ -109,20 +98,12 @@
         .card.solved { pointer-events: none; }
         .card.solved .card-back { border: 4px solid #66bb6a; background-color: #f0fdf4; box-shadow: 0 0 15px rgba(102, 187, 106, 0.6); }
 
-        .card-face {
-            position: absolute; width: 100%; height: 100%; backface-visibility: hidden;
-            display: flex; align-items: center; justify-content: center;
-            font-size: min(4vw, 5vh); border-radius: 10px; box-shadow: 0 3px 6px rgba(0,0,0,0.2); user-select: none;
-        }
+        .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; display: flex; align-items: center; justify-content: center; font-size: min(4vw, 5vh); border-radius: 10px; box-shadow: 0 3px 6px rgba(0,0,0,0.2); user-select: none; }
         .card-front { background-color: var(--card-bg); color: white; background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.05) 0px, rgba(255,255,255,0.05) 10px, transparent 10px, transparent 20px); border: 2px solid rgba(255,255,255,0.3); }
         .coord-label { font-size: min(2vw, 3vh); font-weight: 900; color: rgba(255,255,255,0.9); }
         .card-back { background-color: var(--card-flipped); transform: rotateY(180deg); border: 3px solid var(--card-bg); }
 
-        #modal-overlay, #instructions-modal {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(8px); display: flex; flex-direction: column;
-            align-items: center; justify-content: center; z-index: 2000; opacity: 0; pointer-events: none; transition: opacity 0.3s;
-        }
+        #modal-overlay, #instructions-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(8px); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 2000; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
         #modal-overlay.show, #instructions-modal.show { opacity: 1; pointer-events: all; }
 
         .modal-box { background: white; padding: 20px; border-radius: 25px; text-align: center; width: 90%; max-width: 900px; max-height: 90vh; overflow-y: auto; box-shadow: 0 15px 40px rgba(0,0,0,0.3); border: 5px solid white;}
@@ -131,12 +112,7 @@
         #timer-container { width: 80px; height: 80px; background: var(--card-bg); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px auto; color: white; font-size: 3rem; font-weight: 900; border: 4px solid white; transition: all 0.3s;}
 
         #answers-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 100%; }
-        .mcq-btn { 
-            border: 3px solid transparent; color: #333; font-size: 1.6rem; font-weight: bold; 
-            border-radius: 15px; cursor: pointer; padding: 15px 20px; text-align: right; 
-            box-shadow: 0 4px 10px rgba(0,0,0,0.08); transition: transform 0.1s, opacity 0.3s, background-color 0.3s; 
-            display: flex; align-items: center; position: relative;
-        }
+        .mcq-btn { border: 3px solid transparent; color: #333; font-size: 1.6rem; font-weight: bold; border-radius: 15px; cursor: pointer; padding: 15px 20px; text-align: right; box-shadow: 0 4px 10px rgba(0,0,0,0.08); transition: transform 0.1s, opacity 0.3s, background-color 0.3s; display: flex; align-items: center; position: relative; }
         .mcq-btn:active:not(:disabled) { transform: translateY(4px); box-shadow: 0 0 0 rgba(0,0,0,0); }
         .mcq-btn:disabled { cursor: not-allowed; }
         
@@ -147,13 +123,7 @@
 
         .mcq-btn.wrong-ans { opacity: 0.3; filter: grayscale(80%); }
         .mcq-btn.selected-wrong { background-color: #ef5350 !important; color: white; opacity: 1; filter: none; border-color: #b71c1c; }
-        .mcq-btn.correct-ans { 
-            animation: pulseBtn 1s infinite; z-index: 10; 
-            background-color: #69f0ae !important; 
-            border: 4px solid #00e676; color: #000; font-weight: 900;
-            box-shadow: 0 0 20px rgba(0, 230, 118, 0.6), inset 0 0 10px rgba(0, 230, 118, 0.3);
-            opacity: 1 !important; filter: none !important;
-        }
+        .mcq-btn.correct-ans { animation: pulseBtn 1s infinite; z-index: 10; background-color: #69f0ae !important; border: 4px solid #00e676; color: #000; font-weight: 900; box-shadow: 0 0 20px rgba(0, 230, 118, 0.6), inset 0 0 10px rgba(0, 230, 118, 0.3); opacity: 1 !important; filter: none !important; }
 
         .feedback-anim { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0); font-size: 6rem; font-weight: 900; text-shadow: 0 10px 30px rgba(0,0,0,0.6); z-index: 3000; pointer-events: none; opacity: 0; text-align: center; width: 100%; }
         
@@ -169,13 +139,8 @@
         #podium-announcer { font-size: 3.5rem; height: 5rem; font-weight: 900; text-shadow: 0 5px 15px rgba(0,0,0,0.5); transition: all 0.3s; margin-bottom: 20px; color: var(--active-team); }
         #podium { display: flex; align-items: flex-end; justify-content: center; gap: 15px; margin: 30px 0; height: 35vh; }
         
-        .podium-place { 
-            display: flex; flex-direction: column; align-items: center; justify-content: flex-end; width: 100px; background: rgba(255,255,255,0.2); 
-            border-radius: 15px 15px 0 0; position: relative;
-            opacity: 0; transform: translateY(50px); transition: all 0.5s ease-out;
-        }
+        .podium-place { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; width: 100px; background: rgba(255,255,255,0.2); border-radius: 15px 15px 0 0; position: relative; opacity: 0; transform: translateY(50px); transition: all 0.5s ease-out; }
         .podium-place.revealed { opacity: 1; transform: translateY(0); }
-        
         .podium-place span { font-size: 2rem; font-weight: bold; padding: 10px; }
         .podium-place.p0 { height: 100%; background: linear-gradient(to top, #ffd700, #ffea00); color: black; box-shadow: 0 -5px 20px rgba(255,215,0,0.5); }
         .podium-place.p1 { height: 75%; background: linear-gradient(to top, #c0c0c0, #e0e0e0); color: black; }
@@ -222,21 +187,14 @@
                 <button class="option-btn bot-diff-btn diff-hard" onclick="selectBotDiff('hard', 0.9)">🔴 קשה</button>
             </div>
 
-            <div class="settings-group">
+            <div class="settings-group" id="main-themes-group">
                 <div class="settings-title">נושא המשחק:</div>
-                <button class="option-btn theme-option selected" onclick="selectMainTheme('gen')">🎲 ידע כללי</button>
-                <button class="option-btn theme-option" onclick="selectMainTheme('geo')">🌍 גיאוגרפיה</button>
-                <button class="option-btn theme-option" onclick="selectMainTheme('music')">🎸 מוזיקה</button>
-                <button class="option-btn theme-option" onclick="selectMainTheme('sport')">⚽ ספורט</button>
-                <button class="option-btn theme-option" onclick="selectMainTheme('tv')">📺 סדרות נוער</button>
+                <div id="themes-container"></div>
             </div>
 
-            <div class="settings-group" id="tv-shows-group" style="display: none; background: #f3e5f5;">
-                <div class="settings-title" style="color: #8e24aa;">איזו סדרה? 🍿</div>
-                <button class="option-btn tv-option selected" onclick="selectSpecificTV('tv_hamama')">החממה</button>
-                <button class="option-btn tv-option" onclick="selectSpecificTV('tv_galis')">גאליס</button>
-                <button class="option-btn tv-option" onclick="selectSpecificTV('tv_shminiya')">השמיניה</button>
-                <button class="option-btn tv-option" onclick="selectSpecificTV('tv_shchuna')">שכונה</button>
+            <div class="settings-group" id="sub-themes-group" style="display: none; background: #f3e5f5;">
+                <div class="settings-title" style="color: #8e24aa;">בחרו תת-נושא 🍿</div>
+                <div id="sub-themes-container"></div>
             </div>
 
             <div class="settings-group">
@@ -311,13 +269,97 @@
     </div>
 
     <script>
+        // יצירת אובייקט בסיס לשאלות
+        window.qDB = window.qDB || {};
+
+        // נטען אוטומטית כשהדף עולה
         window.onload = () => {
+            if (typeof gameConfig !== 'undefined') {
+                loadAllQuestionFiles();
+                buildThemeButtons();
+            } else {
+                alert("שגיאה: קובץ ההגדרות (config.js) לא נטען כראוי.");
+            }
+
             let savedDevice = sessionStorage.getItem('doubleTriviaDevice');
             if (savedDevice) {
                 document.getElementById('device-selection-group').style.display = 'none';
                 selectDevice(savedDevice);
             }
         };
+
+        // בניית כפתורי הנושאים מתוך הקונפיג
+        function buildThemeButtons() {
+            const container = document.getElementById('themes-container');
+            container.innerHTML = '';
+            gameConfig.categories.forEach((cat, index) => {
+                let btn = document.createElement('button');
+                btn.className = 'option-btn theme-option' + (index === 0 ? ' selected' : '');
+                btn.innerText = cat.title;
+                btn.onclick = (e) => selectMainTheme(cat, e.target);
+                container.appendChild(btn);
+                if (index === 0) selectMainTheme(cat, btn); // בחירת ברירת מחדל
+            });
+        }
+
+        // טעינת כל קבצי ה-JS שמכילים את השאלות
+        function loadAllQuestionFiles() {
+            gameConfig.categories.forEach(cat => {
+                if (cat.file) {
+                    let s = document.createElement('script');
+                    s.src = cat.file;
+                    document.head.appendChild(s);
+                }
+                if (cat.subCategories) {
+                    cat.subCategories.forEach(sub => {
+                        if (sub.file) {
+                            let s = document.createElement('script');
+                            s.src = sub.file;
+                            document.head.appendChild(s);
+                        }
+                    });
+                }
+            });
+        }
+
+        let selectedDevice = null, selectedTheme = 'gen', selectedPairs = 20, gameMode = 4;
+        let activeTeamId = 1, cards = [], flippedCards = [], activePair = [];
+        let timerInterval, timeLeft = 15, currentCols = 8, matchedPairsCount = 0;
+        let teams = [], currentQuestionObj = null, lockBoard = false;
+        let availableQuestions = [];
+        let botDifficultyProb = 0.6; 
+
+        // בחירת נושא ראשי
+        function selectMainTheme(category, btnElement) { 
+            document.querySelectorAll('.theme-option').forEach(b => b.classList.remove('selected')); 
+            if(btnElement) btnElement.classList.add('selected'); 
+            
+            const subGroup = document.getElementById('sub-themes-group');
+            const subContainer = document.getElementById('sub-themes-container');
+
+            if (category.subCategories && category.subCategories.length > 0) {
+                subGroup.style.display = 'block';
+                subContainer.innerHTML = '';
+                category.subCategories.forEach((sub, index) => {
+                    let btn = document.createElement('button');
+                    btn.className = 'option-btn tv-option' + (index === 0 ? ' selected' : '');
+                    btn.innerText = sub.title;
+                    btn.onclick = (e) => selectSubTheme(sub, e.target);
+                    subContainer.appendChild(btn);
+                    if(index === 0) selectSubTheme(sub, btn);
+                });
+            } else {
+                subGroup.style.display = 'none';
+                selectedTheme = category.id;
+            }
+        }
+
+        // בחירת תת-נושא
+        function selectSubTheme(sub, btnElement) {
+            document.querySelectorAll('.tv-option').forEach(b => b.classList.remove('selected')); 
+            if(btnElement) btnElement.classList.add('selected');
+            selectedTheme = sub.id;
+        }
 
         // --- ניהול סאונד פנימי ---
         const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -353,115 +395,8 @@
         function playSadSound() { initAudio(); playTone(300,'sawtooth',1.0,0,0.2); playTone(250,'sawtooth',1.0,1.0,0.2); }
         function playVictorySound() { initAudio(); [523,659,783,1046,783,1046].forEach((f,i)=>playTone(f,'square',0.5,i*0.2,0.1)); }
 
-        const qDB = {
-            gen: { title: "ידע כללי ומדעים", q: [
-                ["השמש חמה יותר מכדור הארץ.", "נכון", "לא נכון", "", "", 0],
-                ["איזה גז אנחנו נושמים שמאפשר לנו לחיות?", "פחמן דו-חמצני", "חנקן", "חמצן", "הליום", 2],
-                ["איזו חיה מבויתת ישנה הכי הרבה שעות ביום?", "כלב", "חתול", "אוגר", "תוכי", 1],
-                ["עכבישים יכולים לעוף.", "נכון", "לא נכון", "", "", 1],
-                ["איזו שפה מדוברת ביותר בעולם?", "אנגלית", "ספרדית", "מנדרינית", "הינדי", 2],
-                ["היכן מיוצרות כדוריות הדם האדומות?", "הלב", "הכבד", "מח העצם", "הטחול", 2],
-                ["מים רותחים ב-100 מעלות צלזיוס.", "נכון", "לא נכון", "", "", 0],
-                ["לפי האמונה, כמה נשמות יש לחתול?", "7", "9", "13", "3", 1],
-                ["מי חיברה את 'הארי פוטר'?", "טולקין", "קינג", "רולינג", "מרטין", 2],
-                ["צבע הדם של תמנונים הוא כחול.", "נכון", "לא נכון", "", "", 0]
-            ]},
-            geo: { title: "גיאוגרפיה", q: [
-                ["היכן נמצא פסל החירות?", "ניו יורק", "לוס אנג'לס", "וושינגטון", "שיקגו", 0],
-                ["מדבר סהרה נמצא באסיה.", "נכון", "לא נכון", "", "", 1],
-                ["היכן מגדל אייפל?", "לונדון", "ברלין", "פריז", "רומא", 2],
-                ["ההר הגבוה ביפן?", "קילימנג'רו", "פוג'י", "אוורסט", "אלפים", 1],
-                ["יפן מורכבת מאיים.", "נכון", "לא נכון", "", "", 0],
-                ["איפה חיות כיס בטבע?", "אפריקה", "אמריקה", "אוסטרליה", "אסיה", 2],
-                ["איזה עלה על דגל קנדה?", "אלון", "אורן", "אדר (מייפל)", "זית", 2],
-                ["האוקיינוס האטלנטי הוא הגדול בעולם.", "נכון", "לא נכון", "", "", 1],
-                ["מאיפה הגיע הסושי?", "סין", "יפן", "קוריאה", "תאילנד", 1],
-                ["מדינה הגובלת בארה\"ב מדרום?", "קנדה", "ברזיל", "מקסיקו", "פנמה", 2]
-            ]},
-            music: { title: "מוזיקה", q: [
-                ["כמה מיתרים בגיטרה קלאסית?", "4", "5", "6", "8", 2],
-                ["מוצרט היה חירש בסוף חייו.", "נכון", "לא נכון", "", "", 1],
-                ["מי 'מלך הפופ'?", "אלביס", "ג'קסון", "סינטרה", "מרקורי", 1],
-                ["מי זכתה בהכי הרבה פרסי גראמי?", "ביונסה", "טיילור סוויפט", "אדל", "אריאנה", 0], 
-                ["פסנתר נחשב גם לכלי הקשה.", "נכון", "לא נכון", "", "", 0],
-                ["איזה סגנון מזוהה עם ניו אורלינס?", "רוק", "קלאסי", "ג'אז", "פופ", 2],
-                ["מאיפה להקת אבבא?", "בריטניה", "שבדיה", "נורווגיה", "דנמרק", 1],
-                ["איזו להקה שרה Hey Jude?", "קווין", "הביטלס", "U2", "קולדפליי", 1],
-                ["מי הלחין את Für Elise?", "מוצרט", "בטהובן", "באך", "שופן", 1],
-                ["הביטלס הם מארצות הברית.", "נכון", "לא נכון", "", "", 1]
-            ]},
-            sport: { title: "ספורט", q: [
-                ["שחקנים בכדורעף (לקבוצה)?", "5", "6", "7", "11", 1],
-                ["בכדורסל משחקים 5 נגד 5.", "נכון", "לא נכון", "", "", 0],
-                ["השחקן עם חולצה שונה בכדורעף?", "קפטן", "קבלן", "מנחית", "ליברו", 3],
-                ["המכה שמתחילה משחק כדורעף?", "הנחתה", "חסימה", "מכת פתיחה", "הקפצה", 2],
-                ["האולימפיאדה מתרחשת כל 4 שנים.", "נכון", "לא נכון", "", "", 0],
-                ["טורניר וימבלדון זה...", "טניס", "גולף", "כדורמים", "בדמינטון", 0],
-                ["השחקן עם הכי הרבה כדורי זהב?", "מראדונה", "פלה", "מסי", "רונאלדו", 2],
-                ["כמה זמן נמשך משחק כדורגל?", "80", "90", "100", "120", 1],
-                ["בריכה אולימפית היא באורך 100 מטר.", "נכון", "לא נכון", "", "", 1],
-                ["ענף של יוסיין בולט?", "שחייה", "קפיצה לרוחק", "ריצה", "סיוף", 2]
-            ]},
-            tv_hamama: { title: "החממה", q: [
-                ["החממה ממוקמת על שפת הכנרת.", "נכון", "לא נכון", "", "", 0],
-                ["מי מנהיג העורבים בתחילת עונה 1?", "יפתח", "דניאל", "אלפי", "מתי", 0],
-                ["אלה-לי ואלפי הם אחים תאומים.", "נכון", "לא נכון", "", "", 0],
-                ["איזה כלי נגינה מנגן יפתח?", "תופים", "פסנתר", "גיטרה", "חליל", 2],
-                ["דינה שייכת לבית הנשרים.", "נכון", "לא נכון", "", "", 1],
-                ["באיזו קבוצה נמצא דניאל גורן?", "נשרים", "עורבים", "נמרים", "אריות", 0],
-                ["אלונה היא חברת ילדות של מתי.", "נכון", "לא נכון", "", "", 0],
-                ["מי הרשע הראשי בעונה 1 (הלקוח)?", "מרקוס", "זאב נחמיאס", "ג'ודי", "רובי", 1],
-                ["הנשרים לובשים חולצות בצבע כחול.", "נכון", "לא נכון", "", "", 1], 
-                ["מי אביהם של אלה-לי ואלפי?", "גורי", "לואיס", "גרי", "עוזי", 0]
-            ]},
-            tv_galis: { title: "גאליס", q: [
-                ["איך קוראים למחנה הקיץ?", "גאליס", "אולימפוס", "תל אביב", "נרקיס", 0],
-                ["יונתן ודני היו במקור מבית אומנה.", "נכון", "לא נכון", "", "", 0],
-                ["איזה צוות נחשב ליוקרתי ביותר?", "אולימפוס", "סירת", "הרקולס", "פגסוס", 0],
-                ["יונתן הוא המיועד.", "נכון", "לא נכון", "", "", 0],
-                ["מי בת זוגו של דורי בתחילת הסדרה?", "רונה", "יולי", "דני", "נינה", 1],
-                ["ארי הוא המנהל של המחנה.", "נכון", "לא נכון", "", "", 0],
-                ["באיזו עונה הם מחפשים את 'העיר האבודה'?", "עונה 1", "עונה 2", "עונה 3", "עונה 4", 1],
-                ["ליעם חבר בצוות הרקולס.", "נכון", "לא נכון", "", "", 1], 
-                ["דני היא בעצם אחותו של יונתן.", "נכון", "לא נכון", "", "", 1],
-                ["מי שיחק את יונתן?", "דניאל מורשת", "תובל שפיר", "נוה צור", "עומר דרור", 1]
-            ]},
-            tv_shminiya: { title: "השמיניה", q: [
-                ["כמה ילדים יש בפרויקט השמיניה?", "6", "8", "10", "12", 1],
-                ["איה וניני הם במקור בני 10.", "נכון", "לא נכון", "", "", 0],
-                ["מה המומחיות של אבי?", "מחשבים", "מתמטיקה", "היסטוריה", "שחמט", 0],
-                ["למיקה יש כוח לקרוא מחשבות.", "נכון", "לא נכון", "", "", 1], 
-                ["מי המציא את פרויקט השמיניה?", "אבנר", "עמוס דביר", "דדי", "רוברטו", 1],
-                ["איה וניני הם תאומים.", "נכון", "לא נכון", "", "", 0],
-                ["מה שם הארגון הרשע בעונה 1?", "מועצת הסקורפיו", "המסדר", "השחורים", "הלקוח", 0],
-                ["מה המומחיות של רוני?", "ציור", "מחשבים", "מתמטיקה", "שפות", 2],
-                ["איך קוראים לכלב של השמיניה?", "בונו", "ארתור", "מקס", "לא היה להם כלב", 1],
-                ["נטשה מומחית לאמנות וציור.", "נכון", "לא נכון", "", "", 0]
-            ]},
-            tv_shchuna: { title: "שכונה", q: [
-                ["איך קוראים לשכונה של העשירים בסדרה?", "סביון", "נרקיס", "הגבעה", "שכונה", 1],
-                ["רחלי ומיטל הן אחיות.", "נכון", "לא נכון", "", "", 0],
-                ["מיטל כבדת שמיעה.", "נכון", "לא נכון", "", "", 0],
-                ["באיזה ספורט משחקת רחלי?", "כדורסל", "טניס", "כדורגל", "שחייה", 2],
-                ["סוזי שיינפלד היא ראש המועצה.", "נכון", "לא נכון", "", "", 0],
-                ["לירון הוא הבן של סוזי.", "נכון", "לא נכון", "", "", 1], 
-                ["איך קוראים לאבא של רחלי?", "בנדה", "איתן", "משה", "שלומי", 0],
-                ["משפחת שיינפלד גרה בשכונה.", "נכון", "לא נכון", "", "", 1], 
-                ["אודי ואגם הופכים לזוג למרות ההבדלים.", "נכון", "לא נכון", "", "", 0],
-                ["מה שם משפחתה של רחלי?", "בן דוד", "שיינפלד", "לוי", "כהן", 0]
-            ]}
-        };
-
         const allIcons = ['🌍','🚀','💡','🎸','⏰','💎','🎲','🧩','🔬','🧬','🔭','💻','⚡','🪐','🧪','🔋','📡','🦠','🧲','🗽','🗼','🗻','🐫','🗺️','🏝️','⛩️','🏰','🗿','🏔️','🏜️','🌋','🎬','🎨','🎤','🎭','⚽','🍔','🏆','🎮','📸','🎧','🚗','🚲','⚓','🎈','🎯','🪄','🧸','📚','🔥'];
 
-        let selectedDevice = null, selectedTheme = 'gen', selectedPairs = 20, gameMode = 4;
-        let activeTeamId = 1, cards = [], flippedCards = [], activePair = [];
-        let timerInterval, timeLeft = 15, currentCols = 8, matchedPairsCount = 0;
-        let teams = [], currentQuestionObj = null, lockBoard = false;
-        let availableQuestions = [];
-        let botDifficultyProb = 0.6; 
-
-        // פונקציה לחזור למסך ההגדרות (מאפסת את הלוח הנוכחי)
         function goBackToSettings() {
             clearInterval(timerInterval);
             document.getElementById('game-container').style.display = 'none';
@@ -479,26 +414,6 @@
             advSettings.style.animation = 'fadeInDown 0.6s ease forwards';
         }
         
-        function selectMainTheme(theme) { 
-            document.querySelectorAll('.theme-option').forEach(btn => btn.classList.remove('selected')); 
-            event.target.classList.add('selected'); 
-            
-            const tvGroup = document.getElementById('tv-shows-group');
-            if(theme === 'tv') {
-                tvGroup.style.display = 'block';
-                selectedTheme = 'tv_hamama'; 
-            } else {
-                tvGroup.style.display = 'none';
-                selectedTheme = theme;
-            }
-        }
-
-        function selectSpecificTV(tvShow) {
-            document.querySelectorAll('.tv-option').forEach(btn => btn.classList.remove('selected')); 
-            event.target.classList.add('selected');
-            selectedTheme = tvShow;
-        }
-
         function selectPairs(num) { document.querySelectorAll('.pair-option').forEach(btn => btn.classList.remove('selected')); event.target.classList.add('selected'); selectedPairs = num; }
         
         function selectPlayers(mode) { 
@@ -517,10 +432,10 @@
 
         function initGame() {
             if(!selectedDevice) { alert("אנא בחרו מכשיר תחילה!"); return; }
+            if(!window.qDB[selectedTheme]) { alert("שגיאה: קובץ השאלות לנושא זה טרם נטען או לא נמצא!"); return; }
             
             initAudio(); 
             
-            // איפוס מלא של משתני המשחק כדי שאם עשינו "חזור" הכל יתחיל נקי
             teams = [];
             matchedPairsCount = 0;
             activeTeamId = 1;
@@ -541,7 +456,8 @@
 
             renderScoreboard();
 
-            availableQuestions = JSON.parse(JSON.stringify(qDB[selectedTheme].q));
+            // טעינת שאלות מהקובץ הרלוונטי
+            availableQuestions = JSON.parse(JSON.stringify(window.qDB[selectedTheme].q));
             shuffle(availableQuestions);
 
             const board = document.getElementById('game-board');
@@ -616,7 +532,7 @@
             document.getElementById('start-q-box').classList.remove('hidden');
             document.getElementById('question-content').classList.add('hidden');
             
-            const themeTitle = qDB[selectedTheme].title;
+            const themeTitle = window.qDB[selectedTheme].title;
             document.getElementById('topic-badge-start').innerText = `נושא: ${themeTitle}`;
             document.getElementById('topic-badge-q').innerText = `נושא: ${themeTitle}`;
 
@@ -624,7 +540,7 @@
             document.getElementById('modal-title').innerText = titleText;
 
             if (availableQuestions.length === 0) {
-                availableQuestions = JSON.parse(JSON.stringify(qDB[selectedTheme].q));
+                availableQuestions = JSON.parse(JSON.stringify(window.qDB[selectedTheme].q));
                 shuffle(availableQuestions);
             }
             const qData = availableQuestions.pop();
@@ -827,4 +743,3 @@
     </script>
 </body>
 </html>
-
