@@ -10,18 +10,9 @@
 
     <style>
         :root {
-            --primary: #4a4a4a;
-            --bg-color: #fce4ec; 
-            --card-bg: #ab47bc;  
-            --card-flipped: #ffffff;
-            
-            --opt-a: #ffb6c1; 
-            --opt-b: #dda0dd; 
-            --opt-c: #fffacd; 
-            --opt-d: #add8e6; 
-            
-            --active-team: #ffca28;
-            --glass-bg: rgba(255, 255, 255, 0.85);
+            --primary: #4a4a4a; --bg-color: #fce4ec; --card-bg: #ab47bc; --card-flipped: #ffffff;
+            --opt-a: #ffb6c1; --opt-b: #dda0dd; --opt-c: #fffacd; --opt-d: #add8e6; 
+            --active-team: #ffca28; --glass-bg: rgba(255, 255, 255, 0.85);
         }
 
         body {
@@ -64,24 +55,23 @@
         .bot-btn { background-color: #5c6bc0; color: white; }
         .bot-btn.selected { background-color: #3f51b5; box-shadow: 0 5px 15px rgba(63, 81, 181, 0.5); }
         
-        .diff-easy.selected { background-color: #66bb6a; color: white; box-shadow: 0 5px 15px rgba(102, 187, 106, 0.4); }
-        .diff-medium.selected { background-color: #ffa726; color: black; box-shadow: 0 5px 15px rgba(255, 167, 38, 0.4); }
-        .diff-hard.selected { background-color: #ef5350; color: white; box-shadow: 0 5px 15px rgba(239, 83, 80, 0.4); }
+        .diff-easy.selected { background-color: #66bb6a; color: white; }
+        .diff-medium.selected { background-color: #ffa726; color: black; }
+        .diff-hard.selected { background-color: #ef5350; color: white; }
 
         .start-btn {
-            background-color: #ec407a; color: white; border: none;
-            padding: 15px 50px; font-size: 2rem; font-weight: 900; margin: 15px 0;
-            border-radius: 50px; cursor: pointer; box-shadow: 0 8px 0 #ad1457; transition: all 0.1s;
+            background-color: #ec407a; color: white; border: none; padding: 15px 50px; font-size: 2rem; 
+            font-weight: 900; margin: 15px 0; border-radius: 50px; cursor: pointer; box-shadow: 0 8px 0 #ad1457; transition: all 0.1s;
         }
         .start-btn:active { transform: translateY(8px); box-shadow: 0 0 0 #ad1457; }
         .info-btn { background-color: #29b6f6; font-size: 1.2rem; padding: 10px 20px; box-shadow: 0 5px 0 #0288d1; margin-bottom: 15px;}
+        .resume-btn { background-color: #ffb300; box-shadow: 0 5px 0 #ff8f00; color: black; }
 
         @keyframes fadeInDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
 
         #game-container { display: none; flex-direction: column; width: 100%; height: 100%; padding: 10px; box-sizing: border-box; }
-
         #top-controls { display: flex; justify-content: space-between; width: 100%; max-width: 1500px; margin: 0 auto 10px auto; }
-        .control-btn { background: #8e24aa; color: white; border: none; padding: 8px 20px; border-radius: 12px; cursor: pointer; font-weight: bold; font-size: 1.1rem; box-shadow: 0 4px 0 rgba(0,0,0,0.2); transition: transform 0.1s; }
+        .control-btn { background: #8e24aa; color: white; border: none; padding: 8px 20px; border-radius: 12px; cursor: pointer; font-weight: bold; font-size: 1.1rem; box-shadow: 0 4px 0 rgba(0,0,0,0.2); }
         .control-btn:active { transform: translateY(4px); box-shadow: 0 0 0 rgba(0,0,0,0); }
         .control-btn.muted { background: #ef5350; }
 
@@ -116,17 +106,16 @@
         .mcq-btn:active:not(:disabled) { transform: translateY(4px); box-shadow: 0 0 0 rgba(0,0,0,0); }
         .mcq-btn:disabled { cursor: not-allowed; }
         
-        #btn-0 { background-color: var(--opt-a); } 
-        #btn-1 { background-color: var(--opt-b); } 
-        #btn-2 { background-color: var(--opt-c); } 
-        #btn-3 { background-color: var(--opt-d); }
+        .opt-color-0 { background-color: var(--opt-a); } 
+        .opt-color-1 { background-color: var(--opt-b); } 
+        .opt-color-2 { background-color: var(--opt-c); } 
+        .opt-color-3 { background-color: var(--opt-d); }
 
         .mcq-btn.wrong-ans { opacity: 0.3; filter: grayscale(80%); }
         .mcq-btn.selected-wrong { background-color: #ef5350 !important; color: white; opacity: 1; filter: none; border-color: #b71c1c; }
-        .mcq-btn.correct-ans { animation: pulseBtn 1s infinite; z-index: 10; background-color: #69f0ae !important; border: 4px solid #00e676; color: #000; font-weight: 900; box-shadow: 0 0 20px rgba(0, 230, 118, 0.6), inset 0 0 10px rgba(0, 230, 118, 0.3); opacity: 1 !important; filter: none !important; }
+        .mcq-btn.correct-ans { animation: pulseBtn 1s infinite; z-index: 10; background-color: #69f0ae !important; border: 4px solid #00e676; color: #000; font-weight: 900; box-shadow: 0 0 20px rgba(0, 230, 118, 0.6); opacity: 1 !important; filter: none !important; }
 
         .feedback-anim { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0); font-size: 6rem; font-weight: 900; text-shadow: 0 10px 30px rgba(0,0,0,0.6); z-index: 3000; pointer-events: none; opacity: 0; text-align: center; width: 100%; }
-        
         .anim-success { color: #69f0ae; animation: popFeedback 2.5s forwards; }
         .anim-fail { color: #ef5350; animation: popFeedback 2.5s forwards; }
         .anim-streak { color: #ff5722; animation: popFeedback 3s forwards; font-size: 5rem; text-shadow: 0 0 20px yellow; }
@@ -134,27 +123,29 @@
         @keyframes popFeedback { 0% { transform: translate(-50%, -50%) scale(0) rotate(-10deg); opacity: 0; } 15% { transform: translate(-50%, -50%) scale(1.2) rotate(5deg); opacity: 1; } 85% { transform: translate(-50%, -50%) scale(1) rotate(0deg); opacity: 1; } 100% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; } }
         @keyframes pulseBtn { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
 
-        #end-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(171, 71, 188, 0.95); color: white; z-index: 4000; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 1s; text-align: center; }
+        #end-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(171, 71, 188, 0.95); color: white; z-index: 4000; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 1s; text-align: center; overflow: hidden; }
         #end-screen.show { opacity: 1; pointer-events: all; }
         #podium-announcer { font-size: 3.5rem; height: 5rem; font-weight: 900; text-shadow: 0 5px 15px rgba(0,0,0,0.5); transition: all 0.3s; margin-bottom: 20px; color: var(--active-team); }
         #podium { display: flex; align-items: flex-end; justify-content: center; gap: 15px; margin: 30px 0; height: 35vh; }
         
-        .podium-place { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; width: 100px; background: rgba(255,255,255,0.2); border-radius: 15px 15px 0 0; position: relative; opacity: 0; transform: translateY(50px); transition: all 0.5s ease-out; }
+        .podium-place { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; width: 140px; background: rgba(255,255,255,0.2); border-radius: 15px 15px 0 0; position: relative; opacity: 0; transform: translateY(50px); transition: all 0.5s ease-out; }
         .podium-place.revealed { opacity: 1; transform: translateY(0); }
-        .podium-place span { font-size: 2rem; font-weight: bold; padding: 10px; }
+        .podium-place span { font-size: 2rem; font-weight: bold; padding: 5px; }
         .podium-place.p0 { height: 100%; background: linear-gradient(to top, #ffd700, #ffea00); color: black; box-shadow: 0 -5px 20px rgba(255,215,0,0.5); }
         .podium-place.p1 { height: 75%; background: linear-gradient(to top, #c0c0c0, #e0e0e0); color: black; }
         .podium-place.p2 { height: 50%; background: linear-gradient(to top, #cd7f32, #d2691e); color: black; }
         .podium-place.p3 { height: 30%; background: #607d8b; color: white; }
         
-        .team-name-podium { position: absolute; top: -45px; font-weight: 900; font-size: 1.5rem; width: 150px; text-align: center; text-shadow: 1px 1px 3px rgba(0,0,0,0.8); }
-        .team-streak-podium { position: absolute; top: -65px; font-size: 1.1rem; color: #ffeb3b; width: 150px; text-align: center; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); }
+        .team-name-podium { position: absolute; top: -45px; font-weight: 900; font-size: 1.5rem; width: 100%; text-align: center; text-shadow: 1px 1px 3px rgba(0,0,0,0.8); color: white;}
+        .team-stats-podium { position: absolute; top: -85px; font-size: 1rem; color: #ffeb3b; width: 180px; text-align: center; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); line-height: 1.2; background: rgba(0,0,0,0.4); padding: 5px; border-radius: 10px;}
         
-        #end-controls { display: none; margin-top: 30px; animation: fadeInDown 1s ease; }
+        #end-controls { display: none; margin-top: 30px; animation: fadeInDown 1s ease; position: relative; z-index: 10;}
         .credits { font-size: 1.5rem; font-weight: bold; color: rgba(255,255,255,0.9); text-shadow: 1px 1px 2px rgba(0,0,0,0.5); margin-top: 15px; }
         .hidden { display: none !important; }
         @keyframes popScore { 0% { transform: scale(1); } 50% { transform: scale(1.6); color: #69f0ae; } 100% { transform: scale(1); } }
         .pop-anim { animation: popScore 0.8s ease; }
+
+        .confetti { position: absolute; width: 10px; height: 10px; background-color: #f00; z-index: 5; }
     </style>
 </head>
 <body>
@@ -163,6 +154,8 @@
         <h1 style="font-size:4rem; margin-bottom: 5px;">דאבל טריוויה 🎯</h1>
         <button class="start-btn info-btn" onclick="document.getElementById('instructions-modal').classList.add('show')">איך משחקים / משחקות?</button>
         
+        <button id="resume-btn" class="start-btn info-btn resume-btn" style="display:none;" onclick="loadGameState()">🔄 המשך משחק שנשמר</button>
+
         <div class="settings-group" id="device-selection-group">
             <div class="settings-title">כדי להתחיל, באיזה מכשיר אתם/ן?</div>
             <button class="option-btn" id="dev-desktop" onclick="selectDevice('desktop')">💻 מחשב (לזום)</button>
@@ -193,7 +186,7 @@
             </div>
 
             <div class="settings-group" id="sub-themes-group" style="display: none; background: #f3e5f5;">
-                <div class="settings-title" style="color: #8e24aa;">בחרו תת-נושא 🍿</div>
+                <div class="settings-title" style="color: #8e24aa;">בחרו תת-נושא 🔍</div>
                 <div id="sub-themes-container"></div>
             </div>
 
@@ -207,7 +200,7 @@
                 <button class="option-btn pair-option" onclick="selectPairs(50)">50</button>
             </div>
 
-            <button class="start-btn" onclick="initGame()">בואו נתחיל!</button>
+            <button class="start-btn" onclick="initGame(false)">בואו נתחיל!</button>
         </div>
     </div>
 
@@ -216,9 +209,9 @@
             <h2 style="color: var(--card-bg); text-align: center;">איך משחקים? 🧠</h2>
             <ul style="font-size: 1.2rem; line-height: 1.5;">
                 <li>המשחק מתנהל בתורות. בחרו 2 קלפים לפי האותיות והמספרים.</li>
-                <li>מצאתם זוג? תענו על שאלת טריוויה (יש 15 שניות!). עניתם נכון? תקבלו <b>"כל הכבוד!"</b> ונקודה.</li>
-                <li>טעיתם? הזוג נסגר ותראה לכם התשובה הנכונה. <b>השאלה נשרפת!</b> בפעם הבאה שייפתח, תחכה שם שאלה חדשה.</li>
-                <li><b>רצף:</b> 3 תשובות נכונות ברצף יתנו בונוס מיוחד! אם תמשיכו - המספר יעלה! 🔥</li>
+                <li>מצאתם זוג? תענו על שאלת טריוויה (יש 15 שניות!). עניתם נכון? תקבלו <b>נקודה</b>!</li>
+                <li>טעיתם? הזוג נסגר ותראה לכם התשובה הנכונה. <b>השאלה נשרפת!</b> בפעם הבאה יחכה שם טריוויה חדשה.</li>
+                <li><b>רצף:</b> 3 תשובות נכונות ברצף יתנו בונוס מיוחד!</li>
                 <li><b>גלגל הצלה:</b> קבוצה שטועה 5 פעמים ברצף, תקבל בשאלה הבאה זמן בלתי מוגבל (∞)!</li>
             </ul>
             <center><button class="start-btn info-btn" onclick="document.getElementById('instructions-modal').classList.remove('show')">הבנתי, תודה!</button></center>
@@ -227,7 +220,7 @@
 
     <div id="game-container">
         <div id="top-controls">
-            <button class="control-btn" onclick="goBackToSettings()">🔙 חזור להגדרות</button>
+            <button class="control-btn" onclick="requestGoBack()">🔙 חזור להגדרות (ויציאה)</button>
             <button class="control-btn" id="mute-btn" onclick="toggleMute()">🔊 סאונד פועל</button>
         </div>
         
@@ -246,12 +239,7 @@
             <div id="timer-container">15</div>
             <div class="topic-badge" id="topic-badge-q">נושא: ידע כללי</div>
             <div id="question-text">כאן תופיע השאלה</div>
-            <div id="answers-grid">
-                <button class="mcq-btn" id="btn-0" onclick="checkAnswer(0)"></button>
-                <button class="mcq-btn" id="btn-1" onclick="checkAnswer(1)"></button>
-                <button class="mcq-btn" id="btn-2" onclick="checkAnswer(2)"></button>
-                <button class="mcq-btn" id="btn-3" onclick="checkAnswer(3)"></button>
-            </div>
+            <div id="answers-grid"></div>
         </div>
     </div>
 
@@ -269,26 +257,38 @@
     </div>
 
     <script>
-        // יצירת אובייקט בסיס לשאלות
         window.qDB = window.qDB || {};
 
-        // נטען אוטומטית כשהדף עולה
         window.onload = () => {
             if (typeof gameConfig !== 'undefined') {
                 loadAllQuestionFiles();
                 buildThemeButtons();
-            } else {
-                alert("שגיאה: קובץ ההגדרות (config.js) לא נטען כראוי.");
-            }
+            } else { alert("שגיאה: קובץ ההגדרות לא נטען."); }
 
             let savedDevice = sessionStorage.getItem('doubleTriviaDevice');
             if (savedDevice) {
                 document.getElementById('device-selection-group').style.display = 'none';
                 selectDevice(savedDevice);
             }
+
+            // בדיקה אם יש משחק שמור
+            if (localStorage.getItem('savedTriviaGame')) {
+                document.getElementById('resume-btn').style.display = 'inline-block';
+            }
         };
 
-        // בניית כפתורי הנושאים מתוך הקונפיג
+        // לכידת לחצן אחורה (Back Button)
+        window.addEventListener("popstate", (e) => {
+            if (document.getElementById('game-container').style.display === 'flex') {
+                const confirmExit = confirm("בטוחים שאתם רוצים לצאת למסך הראשי? (אל דאגה, המשחק נשמר אוטומטית ותוכלו לחזור אליו!)");
+                if (!confirmExit) {
+                    history.pushState(null, null, window.location.href); // מבטל את החזרה אחורה
+                } else {
+                    goBackToSettings();
+                }
+            }
+        });
+
         function buildThemeButtons() {
             const container = document.getElementById('themes-container');
             container.innerHTML = '';
@@ -298,27 +298,14 @@
                 btn.innerText = cat.title;
                 btn.onclick = (e) => selectMainTheme(cat, e.target);
                 container.appendChild(btn);
-                if (index === 0) selectMainTheme(cat, btn); // בחירת ברירת מחדל
+                if (index === 0) selectMainTheme(cat, btn);
             });
         }
 
-        // טעינת כל קבצי ה-JS שמכילים את השאלות
         function loadAllQuestionFiles() {
             gameConfig.categories.forEach(cat => {
-                if (cat.file) {
-                    let s = document.createElement('script');
-                    s.src = cat.file;
-                    document.head.appendChild(s);
-                }
-                if (cat.subCategories) {
-                    cat.subCategories.forEach(sub => {
-                        if (sub.file) {
-                            let s = document.createElement('script');
-                            s.src = sub.file;
-                            document.head.appendChild(s);
-                        }
-                    });
-                }
+                if (cat.file) { let s = document.createElement('script'); s.src = cat.file; document.head.appendChild(s); }
+                if (cat.subCategories) { cat.subCategories.forEach(sub => { if (sub.file) { let s = document.createElement('script'); s.src = sub.file; document.head.appendChild(s); } }); }
             });
         }
 
@@ -328,12 +315,18 @@
         let teams = [], currentQuestionObj = null, lockBoard = false;
         let availableQuestions = [];
         let botDifficultyProb = 0.6; 
+        let currentDisplayedOptions = []; 
+        let currentThemeIcons = [];
 
-        // בחירת נושא ראשי
+        const fallbackIcons = ['🌍','🚀','💡','🎸','⏰','💎','🎲','🧩','🔬','🧬','🔭','💻','⚡','🪐','🧪','🔋','📡','🦠','🧲','🗽','🗼','🗻','🐫','🗺️','🏝️','⛩️','🏰','🗿','🏔️','🏜️','🌋','🎬','🎨','🎤','🎭','⚽','🍔','🏆','🎮','📸','🎧','🚗','🚲','⚓','🎈','🎯','🪄','🧸','📚','🔥'];
+
         function selectMainTheme(category, btnElement) { 
             document.querySelectorAll('.theme-option').forEach(b => b.classList.remove('selected')); 
             if(btnElement) btnElement.classList.add('selected'); 
             
+            if(category.icons) currentThemeIcons = category.icons;
+            else currentThemeIcons = fallbackIcons;
+
             const subGroup = document.getElementById('sub-themes-group');
             const subContainer = document.getElementById('sub-themes-container');
 
@@ -342,7 +335,7 @@
                 subContainer.innerHTML = '';
                 category.subCategories.forEach((sub, index) => {
                     let btn = document.createElement('button');
-                    btn.className = 'option-btn tv-option' + (index === 0 ? ' selected' : '');
+                    btn.className = 'option-btn sub-option' + (index === 0 ? ' selected' : '');
                     btn.innerText = sub.title;
                     btn.onclick = (e) => selectSubTheme(sub, e.target);
                     subContainer.appendChild(btn);
@@ -354,123 +347,124 @@
             }
         }
 
-        // בחירת תת-נושא
         function selectSubTheme(sub, btnElement) {
-            document.querySelectorAll('.tv-option').forEach(b => b.classList.remove('selected')); 
+            document.querySelectorAll('.sub-option').forEach(b => b.classList.remove('selected')); 
             if(btnElement) btnElement.classList.add('selected');
             selectedTheme = sub.id;
         }
 
-        // --- ניהול סאונד פנימי ---
+        // --- סאונד ---
         const AudioContext = window.AudioContext || window.webkitAudioContext;
-        let audioCtx;
-        let isMuted = false;
-
+        let audioCtx; let isMuted = false;
         function initAudio() { if(!audioCtx && !isMuted) audioCtx = new AudioContext(); }
-        
-        function toggleMute() {
-            isMuted = !isMuted;
-            const btn = document.getElementById('mute-btn');
-            if(isMuted) {
-                btn.innerText = "🔇 מושתק";
-                btn.classList.add('muted');
-            } else {
-                btn.innerText = "🔊 סאונד פועל";
-                btn.classList.remove('muted');
-                initAudio();
-            }
-        }
-
-        function playTone(freq, type, dur, start, vol=0.1) {
-            if(isMuted) return;
-            if(!audioCtx) return; 
-            const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
-            osc.type = type; osc.frequency.setValueAtTime(freq, audioCtx.currentTime + start);
-            osc.connect(gain); gain.connect(audioCtx.destination);
-            gain.gain.setValueAtTime(vol, audioCtx.currentTime + start);
-            gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + start + dur);
-            osc.start(audioCtx.currentTime + start); osc.stop(audioCtx.currentTime + start + dur);
-        }
+        function toggleMute() { isMuted = !isMuted; const btn = document.getElementById('mute-btn'); if(isMuted) { btn.innerText = "🔇 מושתק"; btn.classList.add('muted'); } else { btn.innerText = "🔊 סאונד פועל"; btn.classList.remove('muted'); initAudio(); } }
+        function playTone(freq, type, dur, start, vol=0.1) { if(isMuted || !audioCtx) return; const osc = audioCtx.createOscillator(), gain = audioCtx.createGain(); osc.type = type; osc.frequency.setValueAtTime(freq, audioCtx.currentTime + start); osc.connect(gain); gain.connect(audioCtx.destination); gain.gain.setValueAtTime(vol, audioCtx.currentTime + start); gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + start + dur); osc.start(audioCtx.currentTime + start); osc.stop(audioCtx.currentTime + start + dur); }
         function playHappySound() { initAudio(); playTone(440,'sine',0.5,0,0.2); playTone(554,'sine',0.5,0.15,0.2); playTone(659,'sine',0.5,0.3,0.2); playTone(880,'sine',1.0,0.45,0.3); }
         function playSadSound() { initAudio(); playTone(300,'sawtooth',1.0,0,0.2); playTone(250,'sawtooth',1.0,1.0,0.2); }
         function playVictorySound() { initAudio(); [523,659,783,1046,783,1046].forEach((f,i)=>playTone(f,'square',0.5,i*0.2,0.1)); }
 
-        const allIcons = ['🌍','🚀','💡','🎸','⏰','💎','🎲','🧩','🔬','🧬','🔭','💻','⚡','🪐','🧪','🔋','📡','🦠','🧲','🗽','🗼','🗻','🐫','🗺️','🏝️','⛩️','🏰','🗿','🏔️','🏜️','🌋','🎬','🎨','🎤','🎭','⚽','🍔','🏆','🎮','📸','🎧','🚗','🚲','⚓','🎈','🎯','🪄','🧸','📚','🔥'];
+        function requestGoBack() {
+            const confirmExit = confirm("בטוחים שאתם רוצים לצאת חזרה להגדרות? (המשחק נשמר ותוכלו להמשיך מאוחר יותר!)");
+            if (confirmExit) goBackToSettings();
+        }
 
-        function goBackToSettings() {
-            clearInterval(timerInterval);
-            document.getElementById('game-container').style.display = 'none';
+        function goBackToSettings() { 
+            clearInterval(timerInterval); 
+            document.getElementById('game-container').style.display = 'none'; 
             document.getElementById('start-screen').style.display = 'flex';
-        }
-
-        function selectDevice(dev) { 
-            document.querySelectorAll('#dev-desktop, #dev-mobile').forEach(b=>b.classList.remove('selected')); 
-            document.getElementById('dev-'+dev).classList.add('selected'); 
-            selectedDevice = dev; 
-            sessionStorage.setItem('doubleTriviaDevice', dev); 
-            
-            const advSettings = document.getElementById('advanced-settings');
-            advSettings.style.display = 'flex';
-            advSettings.style.animation = 'fadeInDown 0.6s ease forwards';
+            if (localStorage.getItem('savedTriviaGame')) {
+                document.getElementById('resume-btn').style.display = 'inline-block';
+            }
         }
         
+        function selectDevice(dev) { document.querySelectorAll('#dev-desktop, #dev-mobile').forEach(b=>b.classList.remove('selected')); document.getElementById('dev-'+dev).classList.add('selected'); selectedDevice = dev; sessionStorage.setItem('doubleTriviaDevice', dev); const advSettings = document.getElementById('advanced-settings'); advSettings.style.display = 'flex'; advSettings.style.animation = 'fadeInDown 0.6s ease forwards'; }
         function selectPairs(num) { document.querySelectorAll('.pair-option').forEach(btn => btn.classList.remove('selected')); event.target.classList.add('selected'); selectedPairs = num; }
-        
-        function selectPlayers(mode) { 
-            document.querySelectorAll('.player-option').forEach(btn => btn.classList.remove('selected')); 
-            event.target.classList.add('selected'); 
-            gameMode = mode; 
-            const diffGroup = document.getElementById('bot-diff-group');
-            if(mode === 'bot') { diffGroup.style.display = 'block'; } else { diffGroup.style.display = 'none'; }
-        }
-        
-        function selectBotDiff(level, prob) {
-            document.querySelectorAll('.bot-diff-btn').forEach(btn => btn.classList.remove('selected')); 
-            event.target.classList.add('selected');
-            botDifficultyProb = prob;
-        }
+        function selectPlayers(mode) { document.querySelectorAll('.player-option').forEach(btn => btn.classList.remove('selected')); event.target.classList.add('selected'); gameMode = mode; document.getElementById('bot-diff-group').style.display = (mode === 'bot') ? 'block' : 'none'; }
+        function selectBotDiff(level, prob) { document.querySelectorAll('.bot-diff-btn').forEach(btn => btn.classList.remove('selected')); event.target.classList.add('selected'); botDifficultyProb = prob; }
 
-        function initGame() {
-            if(!selectedDevice) { alert("אנא בחרו מכשיר תחילה!"); return; }
-            if(!window.qDB[selectedTheme]) { alert("שגיאה: קובץ השאלות לנושא זה טרם נטען או לא נמצא!"); return; }
+        function initGame(isResume = false) {
+            if(!selectedDevice) { alert("אנא בחרו מכשיר!"); return; }
+            if(!isResume && !window.qDB[selectedTheme]) { alert("שגיאה: קובץ השאלות טרם נטען. נסו שוב עוד שניה."); return; }
             
             initAudio(); 
-            
-            teams = [];
-            matchedPairsCount = 0;
-            activeTeamId = 1;
-            flippedCards = [];
-            activePair = [];
-            lockBoard = false;
-
             document.getElementById('start-screen').style.display = 'none'; 
             document.getElementById('game-container').style.display = 'flex';
-            
             if(selectedDevice === 'mobile') document.body.classList.add('mobile-mode');
 
-            let numPlayers = (gameMode === 'bot') ? 2 : parseInt(gameMode);
-            for(let i=1; i<=numPlayers; i++) {
-                let tName = (gameMode==='bot' && i===2) ? "בוט אונליין 🤖" : (numPlayers===1 ? "שחקן יחיד" : `קבוצה ${i}`);
-                teams.push({ id: i, name: tName, score: 0, streak: 0, maxStreak: 0, consecutiveFailures: 0 });
+            // דחיפת היסטוריה עבור מנגנון חזור
+            history.pushState(null, null, window.location.href);
+
+            if (!isResume) {
+                teams = []; matchedPairsCount = 0; activeTeamId = 1; flippedCards = []; activePair = []; lockBoard = false;
+                
+                let numPlayers = (gameMode === 'bot') ? 2 : parseInt(gameMode);
+                for(let i=1; i<=numPlayers; i++) {
+                    let tName = (gameMode==='bot' && i===2) ? "בוט אונליין 🤖" : (numPlayers===1 ? "שחקן יחיד" : `קבוצה ${i}`);
+                    teams.push({ id: i, name: tName, score: 0, streak: 0, maxStreak: 0, consecutiveFailures: 0, pairsFound: 0, correctAnswers: 0 });
+                }
+
+                availableQuestions = JSON.parse(JSON.stringify(window.qDB[selectedTheme].q));
+                shuffle(availableQuestions);
+
+                let rows;
+                if(selectedPairs === 5) { currentCols = 5; rows = 2; } else if(selectedPairs === 10) { currentCols = 5; rows = 4; }
+                else if(selectedPairs === 20) { currentCols = 8; rows = 5; } else if(selectedPairs === 30) { currentCols = 10; rows = 6; } 
+                else if(selectedPairs === 40) { currentCols = 10; rows = 8; } else if(selectedPairs === 50) { currentCols = 10; rows = 10; }
+                if(selectedDevice === 'mobile') currentCols = 4;
+                
+                let combinedIcons = [...new Set([...currentThemeIcons, ...fallbackIcons])];
+                const gameIcons = combinedIcons.slice(0, selectedPairs);
+                cards = []; gameIcons.forEach((icon) => { cards.push(icon); cards.push(icon); });
+                shuffle(cards); 
             }
 
+            document.getElementById('game-board').style.gridTemplateColumns = `repeat(${currentCols}, 1fr)`;
             renderScoreboard();
+            renderBoard(isResume);
+            if(!isResume) saveGameState(); // שמירה ראשונית
+        }
 
-            // טעינת שאלות מהקובץ הרלוונטי
-            availableQuestions = JSON.parse(JSON.stringify(window.qDB[selectedTheme].q));
-            shuffle(availableQuestions);
+        function loadGameState() {
+            const saved = localStorage.getItem('savedTriviaGame');
+            if (!saved) return;
+            const state = JSON.parse(saved);
+            
+            selectedTheme = state.selectedTheme;
+            selectedPairs = state.selectedPairs;
+            gameMode = state.gameMode;
+            teams = state.teams;
+            activeTeamId = state.activeTeamId;
+            matchedPairsCount = state.matchedPairsCount;
+            cards = state.cards;
+            currentCols = state.currentCols;
+            currentThemeIcons = state.currentThemeIcons;
+            availableQuestions = state.availableQuestions;
 
-            const board = document.getElementById('game-board');
-            let rows;
-            if(selectedPairs === 5) { currentCols = 5; rows = 2; } else if(selectedPairs === 10) { currentCols = 5; rows = 4; }
-            else if(selectedPairs === 20) { currentCols = 8; rows = 5; } else if(selectedPairs === 30) { currentCols = 10; rows = 6; } 
-            else if(selectedPairs === 40) { currentCols = 10; rows = 8; } else if(selectedPairs === 50) { currentCols = 10; rows = 10; }
-            if(selectedDevice === 'mobile') currentCols = 4;
-            board.style.gridTemplateColumns = `repeat(${currentCols}, 1fr)`;
+            initGame(true); // מעבר למצב חידוש
 
-            const gameIcons = allIcons.slice(0, selectedPairs);
-            cards = []; gameIcons.forEach((icon) => { cards.push(icon); cards.push(icon); });
-            shuffle(cards); renderBoard();
+            // שחזור הקלפים הפתוחים
+            document.querySelectorAll('.card').forEach((c, idx) => {
+                if (state.solvedIndices.includes(idx)) {
+                    c.classList.add('flipped', 'solved');
+                }
+            });
+        }
+
+        function saveGameState() {
+            if (matchedPairsCount >= selectedPairs) return; // לא לשמור אם נגמר המשחק
+            
+            let solvedIndices = [];
+            document.querySelectorAll('.card').forEach((c, idx) => {
+                if (c.classList.contains('solved')) solvedIndices.push(idx);
+            });
+
+            const state = {
+                selectedTheme, selectedPairs, gameMode,
+                teams, activeTeamId, matchedPairsCount,
+                cards, solvedIndices, currentCols, currentThemeIcons,
+                availableQuestions
+            };
+            localStorage.setItem('savedTriviaGame', JSON.stringify(state));
         }
 
         function shuffle(array) { for (let i = array.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [array[i], array[j]] = [array[j], array[i]]; } }
@@ -479,15 +473,16 @@
             const sb = document.getElementById('scoreboard'); sb.innerHTML = '';
             teams.forEach((t, i) => {
                 let div = document.createElement('div');
-                div.className = `team-score ${i===0?'active':''}`; div.id = `team-${t.id}`;
-                div.innerHTML = `${t.name} <span id="score-${t.id}">0</span>
-                                 <div class="streak-icon" id="streak-${t.id}">🔥 רצף: 0</div>
-                                 <div class="mercy-icon" id="mercy-${t.id}">טעות ${t.consecutiveFailures}/5</div>`;
+                div.className = `team-score ${t.id === activeTeamId ? 'active' : ''}`; div.id = `team-${t.id}`;
+                div.innerHTML = `${t.name} <span id="score-${t.id}">${t.score}</span>
+                                 <div class="streak-icon" id="streak-${t.id}" style="display:${t.streak >= 3 ? 'block' : 'none'}">🔥 רצף: ${t.streak}</div>
+                                 <div class="mercy-icon" id="mercy-${t.id}" style="display:${(t.consecutiveFailures > 0 && t.name !== "בוט אונליין 🤖") ? 'block' : 'none'}">${t.consecutiveFailures >= 5 ? 'זמן אינסופי!' : 'טעות ' + t.consecutiveFailures + '/5'}</div>`;
+                if(t.consecutiveFailures >= 5 && t.name !== "בוט אונליין 🤖") div.querySelector('.mercy-icon').style.color = "var(--active-team)";
                 sb.appendChild(div);
             });
         }
 
-        function renderBoard() {
+        function renderBoard(isResume) {
             const board = document.getElementById('game-board'); board.innerHTML = '';
             cards.forEach((icon, index) => {
                 const rowNum = Math.floor(index / currentCols) + 1, colLetter = String.fromCharCode(65 + (index % currentCols));
@@ -508,6 +503,7 @@
         function checkMatch() {
             const [c1, c2] = flippedCards;
             if (c1.dataset.icon === c2.dataset.icon) {
+                teams[activeTeamId - 1].pairsFound++; 
                 activePair = [c1, c2]; openTriviaModal();
             } else {
                 c1.classList.remove('flipped'); c2.classList.remove('flipped');
@@ -520,9 +516,8 @@
             activeTeamId = (activeTeamId % teams.length) + 1;
             document.querySelectorAll('.team-score').forEach(el => el.classList.remove('active'));
             document.getElementById(`team-${activeTeamId}`).classList.add('active');
-
-            if(gameMode === 'bot' && activeTeamId === 2) { lockBoard = true; setTimeout(botPlay, 1000); }
-            else { lockBoard = false; }
+            saveGameState(); // שמירה גם במעבר תור (כדי לשמור רצף טעויות/תור)
+            if(gameMode === 'bot' && activeTeamId === 2) { lockBoard = true; setTimeout(botPlay, 1000); } else { lockBoard = false; }
         }
 
         let isInfiniteTime = false;
@@ -543,20 +538,34 @@
                 availableQuestions = JSON.parse(JSON.stringify(window.qDB[selectedTheme].q));
                 shuffle(availableQuestions);
             }
+            
             const qData = availableQuestions.pop();
-            currentQuestionObj = { q: qData[0], opts: [qData[1], qData[2], qData[3], qData[4]], ans: qData[5] };
-
+            
+            let originalOptions = [qData[1], qData[2], qData[3], qData[4]];
+            let validOptions = [];
             for(let i=0; i<4; i++) {
-                const btn = document.getElementById(`btn-${i}`);
-                if (!currentQuestionObj.opts[i]) {
-                    btn.style.display = 'none';
-                } else {
-                    btn.style.display = 'flex';
-                    let prefix = (currentQuestionObj.opts[i] === "נכון" || currentQuestionObj.opts[i] === "לא נכון") ? "" : "אבגד"[i] + ". ";
-                    btn.innerText = prefix + currentQuestionObj.opts[i];
-                    btn.className = 'mcq-btn'; btn.disabled = false;
-                }
+                if(originalOptions[i] !== "") validOptions.push({ text: originalOptions[i], isCorrect: (i === qData[5]) });
             }
+
+            if (!(validOptions.length === 2 && (validOptions[0].text === "נכון" || validOptions[0].text === "לא נכון"))) {
+                shuffle(validOptions);
+            }
+
+            currentDisplayedOptions = validOptions;
+            currentQuestionObj = { q: qData[0] };
+
+            const grid = document.getElementById('answers-grid');
+            grid.innerHTML = ''; 
+            
+            validOptions.forEach((opt, index) => {
+                let btn = document.createElement('button');
+                btn.className = `mcq-btn opt-color-${index}`;
+                btn.id = `btn-ans-${index}`;
+                let prefix = (opt.text === "נכון" || opt.text === "לא נכון") ? "" : "אבגד"[index] + ". ";
+                btn.innerText = prefix + opt.text;
+                btn.onclick = () => checkAnswer(index);
+                grid.appendChild(btn);
+            });
             
             document.getElementById('question-text').innerText = currentQuestionObj.q;
             modal.classList.add('show');
@@ -569,26 +578,21 @@
 
         function revealQuestion() {
             document.getElementById('start-q-box').classList.add('hidden'); document.getElementById('question-content').classList.remove('hidden');
-            
-            let currentT = teams[activeTeamId - 1];
-            let timerEl = document.getElementById('timer-container');
+            let currentT = teams[activeTeamId - 1]; let timerEl = document.getElementById('timer-container');
 
             if (currentT.consecutiveFailures >= 5 && currentT.name !== "בוט אונליין 🤖") {
-                isInfiniteTime = true;
-                timerEl.innerText = "∞"; timerEl.style.fontSize = "4rem";
-                timerEl.style.borderColor = "var(--active-team)"; timerEl.style.color = "var(--active-team)";
+                isInfiniteTime = true; timerEl.innerText = "∞"; timerEl.style.fontSize = "4rem"; timerEl.style.borderColor = "var(--active-team)"; timerEl.style.color = "var(--active-team)";
             } else {
-                isInfiniteTime = false;
-                timeLeft = 15; timerEl.innerText = timeLeft; timerEl.style.fontSize = "3rem";
-                timerEl.style.borderColor = "white"; timerEl.style.color = "white";
-                
+                isInfiniteTime = false; timeLeft = 15; timerEl.innerText = timeLeft; timerEl.style.fontSize = "3rem"; timerEl.style.borderColor = "white"; timerEl.style.color = "white";
                 timerInterval = setInterval(() => {
                     timeLeft--; timerEl.innerText = timeLeft;
-                    if(timeLeft <= 5) { timerEl.style.borderColor = "var(--ans-red)"; timerEl.style.color = "var(--ans-red)"; }
+                    if(timeLeft <= 5) { timerEl.style.borderColor = "#ef5350"; timerEl.style.color = "#ef5350"; }
                     if (timeLeft <= 0) { clearInterval(timerInterval); handleTimeOut(); }
                 }, 1000);
             }
         }
+
+        function getCorrectOptionIndex() { return currentDisplayedOptions.findIndex(opt => opt.isCorrect); }
 
         function checkAnswer(selectedIndex) {
             if(!isInfiniteTime && timeLeft <= 0) return; 
@@ -596,15 +600,16 @@
             lockButtons();
 
             let currentT = teams[activeTeamId - 1];
+            let correctIndex = getCorrectOptionIndex();
 
-            if (selectedIndex === currentQuestionObj.ans) { 
+            if (currentDisplayedOptions[selectedIndex].isCorrect) { 
                 currentT.consecutiveFailures = 0; 
-                document.getElementById(`btn-${selectedIndex}`).classList.add('correct-ans'); 
+                document.getElementById(`btn-ans-${selectedIndex}`).classList.add('correct-ans'); 
                 successQuestion(); 
             } else { 
                 currentT.consecutiveFailures++; 
-                document.getElementById(`btn-${selectedIndex}`).classList.add('selected-wrong'); 
-                document.getElementById(`btn-${currentQuestionObj.ans}`).classList.add('correct-ans');
+                document.getElementById(`btn-ans-${selectedIndex}`).classList.add('selected-wrong'); 
+                document.getElementById(`btn-ans-${correctIndex}`).classList.add('correct-ans');
                 failQuestion(); 
             }
         }
@@ -613,30 +618,27 @@
             if(isInfiniteTime) return; 
             lockButtons(); 
             teams[activeTeamId - 1].consecutiveFailures++; 
-            document.getElementById(`btn-${currentQuestionObj.ans}`).classList.add('correct-ans');
+            let correctIndex = getCorrectOptionIndex();
+            document.getElementById(`btn-ans-${correctIndex}`).classList.add('correct-ans');
             failQuestion(); 
         }
 
-        function lockButtons() { for(let i=0; i<4; i++) { document.getElementById(`btn-${i}`).disabled = true; document.getElementById(`btn-${i}`).classList.add('wrong-ans'); } }
+        function lockButtons() { currentDisplayedOptions.forEach((_, i) => { let b = document.getElementById(`btn-ans-${i}`); b.disabled = true; b.classList.add('wrong-ans'); }); }
 
         function showAnim(type, textOverride) { 
             const el = document.getElementById(`feedback-${type}`); 
             if(textOverride) el.innerText = textOverride;
-            el.className = 'feedback-anim'; 
-            void el.offsetWidth; 
-            el.classList.add(`anim-${type}`);
+            el.className = 'feedback-anim'; void el.offsetWidth; el.classList.add(`anim-${type}`);
         }
 
         function successQuestion() {
             playHappySound(); showAnim('success');
-            let t = teams[activeTeamId-1]; t.score++; t.streak++; if(t.streak > t.maxStreak) t.maxStreak = t.streak;
+            let t = teams[activeTeamId-1]; t.score++; t.streak++; t.correctAnswers++; 
+            if(t.streak > t.maxStreak) t.maxStreak = t.streak;
             updateScoreboard(); 
-            
-            if(t.streak >= 3) {
-                setTimeout(() => { showAnim('streak', `🔥 אש! ${t.streak} ברצף! 🔥`); }, 1500);
-            }
-
+            if(t.streak >= 3) { setTimeout(() => { showAnim('streak', `🔥 אש! ${t.streak} ברצף! 🔥`); }, 1500); }
             activePair[0].classList.add('solved'); activePair[1].classList.add('solved'); matchedPairsCount++;
+            saveGameState(); // שמירה גם אחרי זוג נכון
             setTimeout(() => { closeModal(); checkEndGame(); }, 3000);
         }
 
@@ -650,16 +652,10 @@
                 document.getElementById(`score-${t.id}`).innerText = t.score;
                 const sEl = document.getElementById(`streak-${t.id}`);
                 const mEl = document.getElementById(`mercy-${t.id}`);
-                
                 if(t.streak >= 3) { sEl.style.display = 'block'; sEl.innerText = `🔥 רצף: ${t.streak}`; } else sEl.style.display = 'none';
-                
-                if(t.consecutiveFailures > 0 && t.consecutiveFailures < 5 && t.name !== "בוט אונליין 🤖") {
-                    mEl.style.display = 'block'; mEl.innerText = `טעות: ${t.consecutiveFailures}/5`; mEl.style.color = "#e53935";
-                } else if(t.consecutiveFailures >= 5 && t.name !== "בוט אונליין 🤖") {
-                    mEl.style.display = 'block'; mEl.innerText = `זמן אינסופי!`; mEl.style.color = "var(--active-team)";
-                } else {
-                    mEl.style.display = 'none';
-                }
+                if(t.consecutiveFailures > 0 && t.consecutiveFailures < 5 && t.name !== "בוט אונליין 🤖") { mEl.style.display = 'block'; mEl.innerText = `טעות: ${t.consecutiveFailures}/5`; mEl.style.color = "#e53935"; } 
+                else if(t.consecutiveFailures >= 5 && t.name !== "בוט אונליין 🤖") { mEl.style.display = 'block'; mEl.innerText = `זמן אינסופי!`; mEl.style.color = "var(--active-team)"; } 
+                else { mEl.style.display = 'none'; }
             });
         }
 
@@ -670,26 +666,47 @@
             let available = Array.from(document.querySelectorAll('.card:not(.solved):not(.flipped)'));
             if(available.length < 2) return;
             let c1 = available[Math.floor(Math.random() * available.length)]; flipCard.call(c1);
-            setTimeout(() => {
-                available = Array.from(document.querySelectorAll('.card:not(.solved):not(.flipped)'));
-                let c2 = available[Math.floor(Math.random() * available.length)]; flipCard.call(c2);
-            }, 800);
+            setTimeout(() => { available = Array.from(document.querySelectorAll('.card:not(.solved):not(.flipped)')); let c2 = available[Math.floor(Math.random() * available.length)]; flipCard.call(c2); }, 800);
         }
 
         function botAnswerTrivia() {
             if(timeLeft <= 0) return;
             let isCorrect = Math.random() < botDifficultyProb; 
+            let correctIndex = getCorrectOptionIndex();
             let chosen;
-            if(isCorrect) {
-                chosen = currentQuestionObj.ans;
-            } else {
-                let validWrongOptions = [0,1,2,3].filter(i => i !== currentQuestionObj.ans && currentQuestionObj.opts[i] !== "");
+            if(isCorrect) { chosen = correctIndex; } 
+            else {
+                let validWrongOptions = currentDisplayedOptions.map((o, i) => i).filter(i => i !== correctIndex);
                 chosen = validWrongOptions[Math.floor(Math.random() * validWrongOptions.length)];
             }
             checkAnswer(chosen);
         }
 
+        function fireConfetti() {
+            const colors = ['#ffca28', '#ab47bc', '#29b6f6', '#66bb6a', '#ec407a'];
+            for (let i = 0; i < 150; i++) {
+                let conf = document.createElement('div');
+                conf.className = 'confetti';
+                conf.style.left = Math.random() * 100 + 'vw';
+                conf.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                conf.style.top = '-10px';
+                document.getElementById('end-screen').appendChild(conf);
+                
+                let speed = Math.random() * 3 + 2;
+                let angle = Math.random() * 360;
+                
+                let fall = setInterval(() => {
+                    let currentTop = parseFloat(conf.style.top);
+                    if (currentTop > window.innerHeight) { clearInterval(fall); conf.remove(); }
+                    conf.style.top = currentTop + speed + 'px';
+                    conf.style.transform = `rotate(${angle}deg)`;
+                    angle += 5;
+                }, 20);
+            }
+        }
+
         function showEndScreen() {
+            localStorage.removeItem('savedTriviaGame'); // מוחקים את השמירה כי המשחק נגמר
             document.getElementById('end-screen').classList.add('show');
             let sortedTeams = [...teams].sort((a,b) => b.score - a.score);
             
@@ -705,8 +722,11 @@
             displayOrder.forEach(item => {
                 podiumHTML += `
                 <div class="podium-place ${placesStyles[item.rank]}" id="podium-rank-${item.rank}">
+                    <div class="team-stats-podium">
+                        💡 מצאו: ${item.t.pairsFound} זוגות<br>
+                        🎯 ענו נכון: ${item.t.correctAnswers} פעמים
+                    </div>
                     <div class="team-name-podium">${item.t.name}</div>
-                    <div class="team-streak-podium">שיא רצף: ${item.t.maxStreak}</div>
                     <span>${item.t.score} נק'</span>
                 </div>`;
             });
@@ -729,14 +749,13 @@
                     
                     if (index === revealSequence.length - 1) {
                         playVictorySound();
+                        fireConfetti();
                         document.getElementById('end-controls').style.display = 'block';
                     } else {
                         playTone(400 + (index*100), 'sine', 0.4, 0, 0.2); 
                     }
-                    
                     setTimeout(() => announcer.classList.remove('pop-anim'), 800);
                 }, delay);
-                
                 delay += 2500; 
             });
         }
