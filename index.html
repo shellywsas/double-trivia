@@ -343,7 +343,7 @@
                 document.getElementById('player-name-input').value = savedName;
             }
 
-            // ידווח "כניסה לאתר" *רק* אם זה באמת רענון אמיתי או כניסה ראשונה
+            // ידווח "כניסה לאתר" *רק* אם זה באמת רענון אמיתי (סגירת דפדפן ופתיחה) ולא לחיצה על "משחק חדש"
             if (!sessionStorage.getItem('trivia_active_session')) {
                 let visits = parseInt(localStorage.getItem('trivia_visit_count')) + 1;
                 localStorage.setItem('trivia_visit_count', visits);
@@ -474,6 +474,7 @@
             event.target.classList.add('selected'); 
             gameMode = mode; 
             document.getElementById('bot-diff-group').style.display = (mode === 'bot') ? 'block' : 'none'; 
+            // אם בחרו שחקן יחיד או בוט - נראה להם את התיבה להקליד את שמם!
             document.getElementById('player-name-group').style.display = (mode === 1 || mode === 'bot') ? 'block' : 'none';
         }
         
@@ -484,12 +485,12 @@
             botMemoryProb = mProb; 
         }
 
-        // פונקציה חדשה שמאפסת בצורה חלקה במקום לרענן את הדף
+        // פונקציה חלקה שרק סוגרת את הפודיום במקום לרענן את כל האתר
         function resetToMainMenu() {
             document.getElementById('end-screen').classList.remove('show');
             document.getElementById('end-controls').style.display = 'none';
             
-            // איפוס שדות משוב
+            // איפוס שדות המשוב
             let fBtn = document.getElementById('feedback-btn');
             fBtn.disabled = false;
             fBtn.innerText = "שליחת משוב 🚀";
@@ -512,7 +513,7 @@
             if (!isResume) {
                 teams = []; matchedPairsCount = 0; activeTeamId = 1; flippedCards = []; activePair = []; lockBoard = false;
                 
-                // שמירת השם אם הוא שינה אותו עכשיו
+                // שמירת השם שהוקלד
                 let pNameInput = document.getElementById('player-name-input').value.trim();
                 if (pNameInput) {
                     localStorage.setItem('trivia_player_name', pNameInput);
@@ -545,7 +546,7 @@
                 cards = []; gameIcons.forEach((icon) => { cards.push(icon); cards.push(icon); });
                 shuffle(cards); 
 
-                // דיווח התחלת משחק
+                // דיווח התחלת משחק לשיטס
                 startTime = Date.now();
                 let themeName = window.qDB[selectedTheme] ? window.qDB[selectedTheme].title : selectedTheme;
                 logEventToSheets("התחיל משחק 🎮", themeName, "-", "-", `הגדרות: מצב ${gameMode}, זוגות: ${selectedPairs}`);
