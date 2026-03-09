@@ -196,6 +196,11 @@
                 <button class="option-btn player-option bot-btn" onclick="selectPlayers('bot')">🤖 נגד המחשב</button>
             </div>
 
+            <div class="settings-group" id="player-name-group" style="display: none; background: #e3f2fd;">
+                <div class="settings-title" style="color: #1565c0;">איך קוראים לך? 👤</div>
+                <input type="text" id="player-name-input" placeholder="הקלד/י את שמך כאן..." style="width: 80%; padding: 10px; border-radius: 10px; border: 2px solid #90caf9; font-size: 1.2rem; text-align: center; font-family: inherit; color: var(--primary);">
+            </div>
+
             <div class="settings-group" id="bot-diff-group" style="display: none; background: #e8eaf6;">
                 <div class="settings-title" style="color: #3f51b5;">רמת החוכמה של הבוט 🤖<br><span style="font-size: 1rem; font-weight: normal; color: #5c6bc0;">(משפיע על הזיכרון והידע של הבוט, לא על השאלות)</span></div>
                 <button class="option-btn bot-diff-btn diff-easy" onclick="selectBotDiff('easy', 0.6, 0.2)">🟢 קל</button>
@@ -275,7 +280,7 @@
         <div id="podium-announcer">מעבדים תוצאות...</div>
         <div id="podium"></div>
         <div id="end-controls">
-            <button class="start-btn" onclick="location.reload()">משחק חדש</button>
+            <button class="start-btn" onclick="resetToMainMenu()">משחק חדש</button>
             <div class="credits">נכתב ע״י שלי, ערן ומעיין 👑</div>
             
             <div id="feedback-section">
@@ -309,6 +314,10 @@
 
         // דיווח גנרי לגוגל שיטס כדי למנוע כפילויות קוד
         function logEventToSheets(eventType, themeName, timeSpent, rating, msg) {
+            let savedName = localStorage.getItem('trivia_player_name');
+            let baseId = localStorage.getItem('trivia_user_id');
+            let finalId = savedName ? `${savedName} (${baseId})` : baseId;
+
             const googleSheetUrl = "https://script.google.com/macros/s/AKfycbwfV4K48iRLCJ7B25kmuMmMZbnBw4Z5w1KBizf9_3rd7kMmD3PBuFMkeXlHg6--xT0H/exec";
             fetch(googleSheetUrl, {
                 method: 'POST',
@@ -316,7 +325,7 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
                     "תאריך ושעה": new Date().toLocaleString('he-IL'),
-                    "מזהה": localStorage.getItem('trivia_user_id'),
+                    "מזהה": finalId,
                     "מספר כניסות": localStorage.getItem('trivia_visit_count'),
                     "סוג אירוע": eventType,
                     "נושא": themeName || "-",
@@ -328,7 +337,13 @@
         }
 
         window.onload = () => {
-            // דיווח "כניסה לאתר" יתבצע *רק* אם זה סשן חדש ולא ריענון של סוף משחק
+            // שחזור השם אם שמור במערכת
+            let savedName = localStorage.getItem('trivia_player_name');
+            if (savedName) {
+                document.getElementById('player-name-input').value = savedName;
+            }
+
+            // ידווח "כניסה לאתר" *רק* אם זה באמת רענון אמיתי או כניסה ראשונה
             if (!sessionStorage.getItem('trivia_active_session')) {
                 let visits = parseInt(localStorage.getItem('trivia_visit_count')) + 1;
                 localStorage.setItem('trivia_visit_count', visits);
@@ -453,13 +468,35 @@
         
         function selectDevice(dev) { document.querySelectorAll('#dev-desktop, #dev-mobile').forEach(b=>b.classList.remove('selected')); document.getElementById('dev-'+dev).classList.add('selected'); selectedDevice = dev; sessionStorage.setItem('doubleTriviaDevice', dev); const advSettings = document.getElementById('advanced-settings'); advSettings.style.display = 'flex'; advSettings.style.animation = 'fadeInDown 0.6s ease forwards'; }
         function selectPairs(num) { document.querySelectorAll('.pair-option').forEach(btn => btn.classList.remove('selected')); event.target.classList.add('selected'); selectedPairs = num; }
-        function selectPlayers(mode) { document.querySelectorAll('.player-option').forEach(btn => btn.classList.remove('selected')); event.target.classList.add('selected'); gameMode = mode; document.getElementById('bot-diff-group').style.display = (mode === 'bot') ? 'block' : 'none'; }
+        
+        function selectPlayers(mode) { 
+            document.querySelectorAll('.player-option').forEach(btn => btn.classList.remove('selected')); 
+            event.target.classList.add('selected'); 
+            gameMode = mode; 
+            document.getElementById('bot-diff-group').style.display = (mode === 'bot') ? 'block' : 'none'; 
+            document.getElementById('player-name-group').style.display = (mode === 1 || mode === 'bot') ? 'block' : 'none';
+        }
         
         function selectBotDiff(level, tProb, mProb) { 
             document.querySelectorAll('.bot-diff-btn').forEach(btn => btn.classList.remove('selected')); 
             event.target.classList.add('selected'); 
             botTriviaProb = tProb; 
             botMemoryProb = mProb; 
+        }
+
+        // פונקציה חדשה שמאפסת בצורה חלקה במקום לרענן את הדף
+        function resetToMainMenu() {
+            document.getElementById('end-screen').classList.remove('show');
+            document.getElementById('end-controls').style.display = 'none';
+            
+            // איפוס שדות משוב
+            let fBtn = document.getElementById('feedback-btn');
+            fBtn.disabled = false;
+            fBtn.innerText = "שליחת משוב 🚀";
+            document.getElementById('feedback-input').value = "";
+            setRating(0);
+            
+            goBackToSettings();
         }
 
         function initGame(isResume = false) {
@@ -475,9 +512,22 @@
             if (!isResume) {
                 teams = []; matchedPairsCount = 0; activeTeamId = 1; flippedCards = []; activePair = []; lockBoard = false;
                 
+                // שמירת השם אם הוא שינה אותו עכשיו
+                let pNameInput = document.getElementById('player-name-input').value.trim();
+                if (pNameInput) {
+                    localStorage.setItem('trivia_player_name', pNameInput);
+                } else if (gameMode !== 1 && gameMode !== 'bot') {
+                    localStorage.removeItem('trivia_player_name');
+                }
+                let savedName = localStorage.getItem('trivia_player_name') || "";
+
                 let numPlayers = (gameMode === 'bot') ? 2 : parseInt(gameMode);
                 for(let i=1; i<=numPlayers; i++) {
-                    let tName = (gameMode==='bot' && i===2) ? "בוט אונליין 🤖" : (numPlayers===1 ? "שחקן יחיד" : `קבוצה ${i}`);
+                    let tName = `קבוצה ${i}`;
+                    if (gameMode === 1 || gameMode === 'bot') {
+                        if (i === 1) tName = savedName ? savedName : "שחקן יחיד";
+                        if (gameMode === 'bot' && i === 2) tName = "בוט אונליין 🤖";
+                    }
                     teams.push({ id: i, name: tName, score: 0, streak: 0, maxStreak: 0, consecutiveFailures: 0, pairsFound: 0, correctAnswers: 0, wrongAnswers: 0 });
                 }
 
@@ -865,7 +915,6 @@
 
             logEventToSheets("משוב שחקן 💬", themeName, timeSpent, currentRating > 0 ? currentRating + "/5" : "-", msg);
             
-            // תצוגת הצלחה זמנית כי השליחה היא ברקע
             setTimeout(() => {
                 document.getElementById('feedback-section').innerHTML = "<h3 style='color:#69f0ae;'>תודה רבה! המשוב נשמר בטבלה בהצלחה 💖</h3>";
             }, 1500);
