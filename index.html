@@ -65,7 +65,8 @@
             background-color: #ec407a; color: white; border: none; padding: 15px 50px; font-size: 2rem; 
             font-weight: 900; margin: 15px 0; border-radius: 50px; cursor: pointer; box-shadow: 0 8px 0 #ad1457; transition: all 0.1s;
         }
-        .start-btn:active { transform: translateY(8px); box-shadow: 0 0 0 #ad1457; }
+        .start-btn:active:not(:disabled) { transform: translateY(8px); box-shadow: 0 0 0 #ad1457; }
+        .start-btn:disabled { opacity: 0.7; cursor: not-allowed; }
         .info-btn { background-color: #29b6f6; font-size: 1.2rem; padding: 10px 20px; box-shadow: 0 5px 0 #0288d1; margin-bottom: 15px;}
         .resume-btn { background-color: #ffb300; box-shadow: 0 5px 0 #ff8f00; color: black; }
 
@@ -162,7 +163,7 @@
         #feedback-section { margin-top: 25px; background: rgba(0,0,0,0.3); padding: 20px; border-radius: 15px; border: 2px solid white; display: none; }
         #feedback-section h3 { margin: 0 0 10px 0; font-size: 1.3rem; }
         #feedback-input { width: 90%; max-width: 400px; padding: 10px; border-radius: 10px; border: none; font-family: inherit; font-size: 1rem; margin-bottom: 10px; resize: none;}
-        #feedback-btn { background: #69f0ae; color: black; font-weight: bold; padding: 8px 20px; border: none; border-radius: 10px; cursor: pointer; font-size: 1.1rem;}
+        #feedback-btn { background: #69f0ae; color: black; font-weight: bold; padding: 8px 20px; border: none; border-radius: 10px; cursor: pointer; font-size: 1.1rem; transition: 0.3s;}
         
         /* התוספת של הכוכבים */
         .star-rating { display: flex; justify-content: center; gap: 10px; margin-bottom: 15px; direction: ltr; }
@@ -297,7 +298,44 @@
     <script>
         window.qDB = window.qDB || {};
 
+        // --- מערכת מעקב ואנליטיקה ---
+        if (!localStorage.getItem('trivia_user_id')) {
+            localStorage.setItem('trivia_user_id', 'user_' + Math.random().toString(36).substr(2, 9));
+            localStorage.setItem('trivia_visit_count', 0);
+            localStorage.setItem('trivia_games_finished', 0);
+        }
+        
+        let visits = parseInt(localStorage.getItem('trivia_visit_count')) + 1;
+        localStorage.setItem('trivia_visit_count', visits);
+        let startTime = Date.now(); 
+
+        // דיווח כניסה שקט (מופעל אוטומטית כשהדף עולה)
+        function logSilentVisit() {
+            const googleSheetUrl = "https://script.google.com/macros/s/AKfycbzw2_ts1iAIXfZVaw2mn9AgX8Sr4g1gi0cGvNk8EAJB37cawCJjCerXeEsnRj75CNNk/exec";
+            fetch(googleSheetUrl, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    "תאריך ושעה": new Date().toLocaleString('he-IL'),
+                    "סוג אירוע": "כניסה למשחק 🚩",
+                    "מזהה שחקן ייחודי": localStorage.getItem('trivia_user_id'),
+                    "מספר כניסות לאתר": visits,
+                    "סוג מכשיר": window.innerWidth < 768 ? "טלפון נייד" : "מחשב/טאבלט",
+                    "רזולוציית מסך": window.screen.width + "x" + window.screen.height,
+                    "מקור הגעה (Referrer)": document.referrer || "כניסה ישירה",
+                    "נושא ששיחק": "-",
+                    "מצב משחק": "-",
+                    "זמן משחק (דקות)": "-",
+                    "דירוג כוכבים": "-",
+                    "הודעת משוב": "-"
+                })
+            }).catch(e => console.log("Silent log failed"));
+        }
+
         window.onload = () => {
+            logSilentVisit(); 
+
             if (typeof gameConfig !== 'undefined') {
                 loadAllQuestionFiles();
                 buildThemeButtons();
@@ -432,7 +470,7 @@
                 let numPlayers = (gameMode === 'bot') ? 2 : parseInt(gameMode);
                 for(let i=1; i<=numPlayers; i++) {
                     let tName = (gameMode==='bot' && i===2) ? "בוט אונליין 🤖" : (numPlayers===1 ? "שחקן יחיד" : `קבוצה ${i}`);
-                    teams.push({ id: i, name: tName, score: 0, streak: 0, maxStreak: 0, consecutiveFailures: 0, pairsFound: 0, correctAnswers: 0 });
+                    teams.push({ id: i, name: tName, score: 0, streak: 0, maxStreak: 0, consecutiveFailures: 0, pairsFound: 0, correctAnswers: 0, wrongAnswers: 0 });
                 }
 
                 availableQuestions = JSON.parse(JSON.stringify(window.qDB[selectedTheme].q));
@@ -577,7 +615,10 @@
             }
 
             currentDisplayedOptions = validOptions;
-            currentQuestionObj = { q: qData[0] };
+            
+            // שימוש בטיימר הספציפי של השאלה אם הוגדר
+            let qTimer = qData.length > 6 ? qData[6] : null;
+            currentQuestionObj = { q: qData[0], timer: qTimer };
 
             const grid = document.getElementById('answers-grid');
             grid.innerHTML = ''; 
@@ -609,7 +650,7 @@
                 isInfiniteTime = true; timerEl.innerText = "∞"; timerEl.style.fontSize = "4rem"; timerEl.style.borderColor = "var(--active-team)"; timerEl.style.color = "var(--active-team)";
             } else {
                 isInfiniteTime = false; 
-                timeLeft = checkIfSerious() ? 30 : 15; 
+                timeLeft = currentQuestionObj.timer ? currentQuestionObj.timer : (checkIfSerious() ? 30 : 15); 
                 timerEl.innerText = timeLeft; timerEl.style.fontSize = "3rem"; timerEl.style.borderColor = "white"; timerEl.style.color = "white";
                 timerInterval = setInterval(() => {
                     timeLeft--; timerEl.innerText = timeLeft;
@@ -671,7 +712,11 @@
         }
 
         function failQuestion() {
-            playSadSound(); showAnim('fail'); updateScoreboard();
+            playSadSound(); showAnim('fail'); 
+            
+            teams[activeTeamId-1].wrongAnswers = (teams[activeTeamId-1].wrongAnswers || 0) + 1;
+            
+            updateScoreboard();
             
             if (checkIfSerious() && !(gameMode === 'bot' && activeTeamId === 2)) {
                 document.getElementById('close-q-btn').classList.remove('hidden');
@@ -762,26 +807,42 @@
                 else star.classList.remove('active');
             });
         }
-function sendFeedback() {
+
+        function sendFeedback() {
             const msg = document.getElementById('feedback-input').value;
+            const btn = document.getElementById('feedback-btn');
             
             if(!msg && currentRating === 0) {
                 alert("אנא סמנו דירוג כוכבים או כתבו לנו משהו לפני השליחה 😊");
                 return;
             }
             
-            // הכניסי כאן בתוך המרכאות את הלינק שקיבלת מגוגל שיטס!
-            const googleSheetUrl = "https://script.google.com/macros/s/AKfycbzw2_ts1iAIXfZVaw2mn9AgX8Sr4g1gi0cGvNk8EAJB37cawCJjCerXeEsnRj75CNNk/exec"; 
+            btn.disabled = true;
+            btn.innerText = "שולח... ⏳";
             
+            // הכניסי כאן את הקישור שלך מה-Google Apps Script!
+            const googleSheetUrl = "https://script.google.com/macros/s/AKfycbyqEdd-5EGy9mL6LYFcqEaLMGwBPzUABrhjeD1gXl-srPt0PtWRmPJ3XdWPrwgeJ3cr/exec"; 
+            
+            let timeSpent = Math.round((Date.now() - startTime) / 1000 / 60);
+            let themeName = window.qDB[selectedTheme] ? window.qDB[selectedTheme].title : selectedTheme;
+
             fetch(googleSheetUrl, {
                 method: 'POST',
-                mode: 'no-cors', // קריטי כדי שגוגל לא יחסום את הבקשה מהדפדפן
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                mode: 'no-cors', 
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
-                    "דירוג": currentRating > 0 ? currentRating + " מתוך 5 כוכבים" : "לא סומן דירוג",
-                    "הודעה": msg || "לא נכתב טקסט חופשי"
+                    "תאריך ושעה": new Date().toLocaleString('he-IL'),
+                    "סוג אירוע": "סיום ומשוב 💬",
+                    "מזהה שחקן ייחודי": localStorage.getItem('trivia_user_id'),
+                    "מספר כניסות לאתר": localStorage.getItem('trivia_visit_count'),
+                    "סוג מכשיר": selectedDevice === 'mobile' ? "טלפון נייד" : "מחשב/טאבלט",
+                    "רזולוציית מסך": window.screen.width + "x" + window.screen.height,
+                    "מקור הגעה (Referrer)": "-",
+                    "נושא ששיחק": themeName,
+                    "מצב משחק": gameMode === 'bot' ? "נגד בוט" : gameMode + " קבוצות",
+                    "זמן משחק (דקות)": timeSpent,
+                    "דירוג כוכבים": currentRating > 0 ? currentRating + "/5" : "לא דורג",
+                    "הודעת משוב": msg || "ללא טקסט"
                 })
             }).then(() => {
                 document.getElementById('feedback-section').innerHTML = "<h3 style='color:#69f0ae;'>תודה רבה! המשוב נשמר בטבלה בהצלחה 💖</h3>";
@@ -792,6 +853,10 @@ function sendFeedback() {
 
         function showEndScreen() {
             localStorage.removeItem('savedTriviaGame'); 
+            
+            let finished = parseInt(localStorage.getItem('trivia_games_finished') || 0) + 1;
+            localStorage.setItem('trivia_games_finished', finished);
+
             document.getElementById('end-screen').classList.add('show');
             
             let sortedTeams = [...teams].sort((a,b) => b.score - a.score);
@@ -815,11 +880,12 @@ function sendFeedback() {
 
             displayOrder.forEach(t => {
                 let styleRank = t.rank > 3 ? 3 : t.rank; 
+                let wrongs = t.wrongAnswers || 0;
                 podiumHTML += `
                 <div class="podium-place ${placesStyles[styleRank]}" id="podium-rank-${t.id}">
                     <div class="team-stats-podium">
-                        💡 מצאו: ${t.pairsFound} זוגות שונים<br>
-                        🎯 ענו נכון: ${t.correctAnswers} פעמים
+                        💡 זוגות: ${t.pairsFound}<br>
+                        ✅ נכון: ${t.correctAnswers} | ❌ טעות: ${wrongs}
                     </div>
                     <div class="team-name-podium">${t.name}</div>
                     <span>${t.score} נק'</span>
