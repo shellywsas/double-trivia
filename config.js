@@ -4,9 +4,27 @@ const gameConfig = {
     categories: [
         { id: 'gen', title: '🎲 ידע כללי', file: 'questions/gen.js', icons: ['🌍','🚀','💡','⏰','💎','🎲','🧩','🔬','🧬','🔭','💻','⚡','🪐','🧪','🔋','📡','🦠','🧲','🗽','🗼'] },
         { id: 'kids', title: '🧸 ילדים (עד גיל 10)', file: 'questions/kids.js', icons: ['🧸','🎈','🦄','🐶','🐱','🐰','🐼','🐸','🐯','🦁','🐮','🐷','🐒','🐔','🐧','🐦','🐤','🍭','🍬','🍫','🪁','🚗','🚁','🎡'] },
-        
         { id: 'evolution', title: '🧬 אבולוציה', file: 'questions/evolution.js', icons: ['🧬','🐒','🌍','🦖','🦕','🦴','🌿','🦠','🔬','👣','🐟','🐸','🦧','🦍','🦅','🐢','🦎'] },
         
+        { id: 'physics', title: '🧲 פיזיקה', icons: ['🧲','⚡','💡','🔭','🚀','🍎','🍏','📉','📈','📏','📐','⚛️','🔋'], subCategories: [
+            { id: 'physics_mechanics', title: 'מכניקה', file: 'questions/physics_mechanics.js' },
+            { id: 'physics_electricity', title: 'חשמל', file: 'questions/physics_electricity.js' },
+            { id: 'physics_mixed', title: 'מעורבב', file: 'questions/physics_mixed.js' }
+        ]},
+
+        { id: 'math', title: '➗ מתמטיקה', icons: ['➗','✖️','➕','➖','📐','📏','📊','📉','📈','🔢','💯'], subCategories: [
+            { id: 'math_calculus', title: 'חדו"א', file: 'questions/math_calculus.js' },
+            { id: 'math_geometry', title: 'הנדסה וטריגו', file: 'questions/math_geometry.js' },
+            { id: 'math_mixed', title: 'מעורבב', file: 'questions/math_mixed.js' }
+        ]},
+
+        { id: 'cs', title: '💻 מדעי המחשב', icons: ['💻','⌨️','🖥️','🖱️','🌐','⚙️','👾','💾','🕹️','🤖'], subCategories: [
+            { id: 'cs_java', title: 'Java', file: 'questions/cs_java.js' },
+            { id: 'cs_python', title: 'Python', file: 'questions/cs_python.js' },
+            { id: 'cs_javascript', title: 'JavaScript', file: 'questions/cs_javascript.js' },
+            { id: 'cs_csharp', title: 'C#', file: 'questions/cs_csharp.js' }
+        ]},
+
         { id: 'sport', title: '⚽ ספורט', icons: ['⚽','🏀','🏈','⚾','🎾','🏐','🏉','🎱','🏓','🏸','🥅','🏒','🏑','🏏','⛳','🏹','🎣','🥊','🥋','⛸️','🎿','🏂','🏋️','🤺','🤼','🤸','⛹️','🤾','🏌️','🏄','🏊','🤽','🚣','🏇','🚴','🏆','🥇','🏅'], subCategories: [
             { id: 'sport_mixed', title: 'מעורבב', file: 'questions/sport.js' },
             { id: 'sport_football', title: 'כדורגל', file: 'questions/sport_football.js' },

@@ -27,7 +27,9 @@
         body.mobile-mode #game-container { height: auto; padding-bottom: 50px; }
         body.mobile-mode .card-face { font-size: min(10vw, 8vh); }
         body.mobile-mode .coord-label { font-size: 4vw; }
-        body.mobile-mode #answers-grid { grid-template-columns: 1fr; height: auto; }
+        body.mobile-mode #answers-grid { grid-template-columns: 1fr; gap: 10px; height: auto; }
+        body.mobile-mode .mcq-btn { font-size: 1.2rem; padding: 12px; white-space: normal; height: auto; min-height: 60px; line-height: 1.3; }
+        body.mobile-mode #question-text { font-size: 1.6rem; }
 
         h1 { margin: 5px 0; font-size: 2.5vh; text-align: center; color: var(--card-bg); font-weight: 900; }
 
@@ -88,18 +90,27 @@
         .card.solved { pointer-events: none; }
         .card.solved .card-back { border: 4px solid #66bb6a; background-color: #f0fdf4; box-shadow: 0 0 15px rgba(102, 187, 106, 0.6); }
 
-        .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; display: flex; align-items: center; justify-content: center; font-size: min(4vw, 5vh); border-radius: 10px; box-shadow: 0 3px 6px rgba(0,0,0,0.2); user-select: none; }
-        .card-front { background-color: var(--card-bg); color: white; background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.05) 0px, rgba(255,255,255,0.05) 10px, transparent 10px, transparent 20px); border: 2px solid rgba(255,255,255,0.3); }
+        .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; display: flex; align-items: center; justify-content: center; border-radius: 10px; box-shadow: 0 3px 6px rgba(0,0,0,0.2); user-select: none; }
+        .card-front { background-color: var(--card-bg); font-size: min(4vw, 5vh); color: white; background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.05) 0px, rgba(255,255,255,0.05) 10px, transparent 10px, transparent 20px); border: 2px solid rgba(255,255,255,0.3); }
         .coord-label { font-size: min(2vw, 3vh); font-weight: 900; color: rgba(255,255,255,0.9); }
-        .card-back { background-color: var(--card-flipped); transform: rotateY(180deg); border: 3px solid var(--card-bg); }
+        
+        .card-back { background-color: var(--card-flipped); font-size: min(10vw, 12vh); transform: rotateY(180deg); border: 3px solid var(--card-bg); }
 
         #modal-overlay, #instructions-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(8px); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 2000; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
         #modal-overlay.show, #instructions-modal.show { opacity: 1; pointer-events: all; }
 
-        .modal-box { background: white; padding: 20px; border-radius: 25px; text-align: center; width: 90%; max-width: 900px; max-height: 90vh; overflow-y: auto; box-shadow: 0 15px 40px rgba(0,0,0,0.3); border: 5px solid white;}
+        .modal-box { position: relative; background: white; padding: 20px; border-radius: 25px; text-align: center; width: 90%; max-width: 900px; max-height: 90vh; overflow-y: auto; box-shadow: 0 15px 40px rgba(0,0,0,0.3); border: 5px solid white;}
         .topic-badge { background: var(--card-bg); color: white; padding: 5px 20px; border-radius: 20px; font-weight: bold; display: inline-block; margin-bottom: 10px; }
         #question-text { font-size: 2.2rem; font-weight: 900; color: var(--primary); line-height: 1.3; margin-bottom: 15px;}
         #timer-container { width: 80px; height: 80px; background: var(--card-bg); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px auto; color: white; font-size: 3rem; font-weight: 900; border: 4px solid white; transition: all 0.3s;}
+
+        #close-q-btn {
+            position: absolute; top: 15px; left: 15px; background: #ef5350; color: white; border: 2px solid #b71c1c;
+            border-radius: 50%; width: 45px; height: 45px; font-size: 1.8rem; font-weight: bold;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2); transition: transform 0.2s; z-index: 50;
+        }
+        #close-q-btn:hover { transform: scale(1.1); background: #f44336; }
 
         #answers-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 100%; }
         .mcq-btn { border: 3px solid transparent; color: #333; font-size: 1.6rem; font-weight: bold; border-radius: 15px; cursor: pointer; padding: 15px 20px; text-align: right; box-shadow: 0 4px 10px rgba(0,0,0,0.08); transition: transform 0.1s, opacity 0.3s, background-color 0.3s; display: flex; align-items: center; position: relative; }
@@ -123,7 +134,7 @@
         @keyframes popFeedback { 0% { transform: translate(-50%, -50%) scale(0) rotate(-10deg); opacity: 0; } 15% { transform: translate(-50%, -50%) scale(1.2) rotate(5deg); opacity: 1; } 85% { transform: translate(-50%, -50%) scale(1) rotate(0deg); opacity: 1; } 100% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; } }
         @keyframes pulseBtn { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
 
-        #end-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(171, 71, 188, 0.95); color: white; z-index: 4000; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 1s; text-align: center; overflow: hidden; }
+        #end-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(171, 71, 188, 0.95); color: white; z-index: 4000; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 1s; text-align: center; overflow-y: auto; overflow-x: hidden; padding: 20px 0;}
         #end-screen.show { opacity: 1; pointer-events: all; }
         #podium-announcer { font-size: 3.5rem; height: 5rem; font-weight: 900; text-shadow: 0 5px 15px rgba(0,0,0,0.5); transition: all 0.3s; margin-bottom: 20px; color: var(--active-team); }
         #podium { display: flex; align-items: flex-end; justify-content: center; gap: 15px; margin: 30px 0; height: 35vh; }
@@ -146,6 +157,17 @@
         .pop-anim { animation: popScore 0.8s ease; }
 
         .confetti { position: absolute; width: 10px; height: 10px; background-color: #f00; z-index: 5; }
+
+        /* עיצוב לתיבת המשוב */
+        #feedback-section { margin-top: 25px; background: rgba(0,0,0,0.3); padding: 20px; border-radius: 15px; border: 2px solid white; display: none; }
+        #feedback-section h3 { margin: 0 0 10px 0; font-size: 1.3rem; }
+        #feedback-input { width: 90%; max-width: 400px; padding: 10px; border-radius: 10px; border: none; font-family: inherit; font-size: 1rem; margin-bottom: 10px; resize: none;}
+        #feedback-btn { background: #69f0ae; color: black; font-weight: bold; padding: 8px 20px; border: none; border-radius: 10px; cursor: pointer; font-size: 1.1rem;}
+        
+        /* התוספת של הכוכבים */
+        .star-rating { display: flex; justify-content: center; gap: 10px; margin-bottom: 15px; direction: ltr; }
+        .star { font-size: 2.5rem; color: #ccc; cursor: pointer; transition: color 0.2s; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+        .star.active { color: #ffca28; }
     </style>
 </head>
 <body>
@@ -209,8 +231,8 @@
             <h2 style="color: var(--card-bg); text-align: center;">איך משחקים? 🧠</h2>
             <ul style="font-size: 1.2rem; line-height: 1.5;">
                 <li>המשחק מתנהל בתורות. בחרו 2 קלפים לפי האותיות והמספרים.</li>
-                <li>מצאתם זוג? תענו על שאלת טריוויה (יש 15 שניות!). עניתם נכון? תקבלו <b>נקודה</b>!</li>
-                <li>טעיתם? הזוג נסגר ותראה לכם התשובה הנכונה. <b>השאלה נשרפת!</b> בפעם הבאה יחכה שם טריוויה חדשה.</li>
+                <li>מצאתם זוג? תענו על שאלת טריוויה! יש נושאים עם 15 שניות ונושאים רציניים עם 30 שניות. עניתם נכון? תקבלו <b>נקודה</b>!</li>
+                <li>טעיתם? הזוג נסגר ותראה לכם התשובה הנכונה. <b>השאלה נשרפת!</b> בנושאים רציניים, השאלה תישאר על המסך עד שתלחצו על לחצן היציאה כדי שתוכלו ללמוד.</li>
                 <li><b>רצף:</b> 3 תשובות נכונות ברצף יתנו בונוס מיוחד!</li>
                 <li><b>גלגל הצלה:</b> קבוצה שטועה 5 פעמים ברצף, תקבל בשאלה הבאה זמן בלתי מוגבל (∞)!</li>
             </ul>
@@ -236,6 +258,7 @@
         </div>
         
         <div id="question-content" class="hidden modal-box" style="background: rgba(255,255,255,0.95); max-width: 900px; padding:20px;">
+            <button id="close-q-btn" class="hidden" onclick="closeModalManual()">X</button>
             <div id="timer-container">15</div>
             <div class="topic-badge" id="topic-badge-q">נושא: ידע כללי</div>
             <div id="question-text">כאן תופיע השאלה</div>
@@ -253,6 +276,21 @@
         <div id="end-controls">
             <button class="start-btn" onclick="location.reload()">משחק חדש</button>
             <div class="credits">נכתב ע״י שלי, ערן ומעיין 👑</div>
+            
+            <div id="feedback-section">
+                <h3>מה חשבתם על המשחק? נשמח לשמוע! 🤩</h3>
+                
+                <div class="star-rating" dir="ltr">
+                    <span class="star" onclick="setRating(1)">★</span>
+                    <span class="star" onclick="setRating(2)">★</span>
+                    <span class="star" onclick="setRating(3)">★</span>
+                    <span class="star" onclick="setRating(4)">★</span>
+                    <span class="star" onclick="setRating(5)">★</span>
+                </div>
+
+                <textarea id="feedback-input" rows="3" placeholder="ספרו לנו מה אהבתם, מה אפשר לשפר, או סתם תגידו שלום..."></textarea><br>
+                <button id="feedback-btn" onclick="sendFeedback()">שליחת משוב 🚀</button>
+            </div>
         </div>
     </div>
 
@@ -271,18 +309,16 @@
                 selectDevice(savedDevice);
             }
 
-            // בדיקה אם יש משחק שמור
             if (localStorage.getItem('savedTriviaGame')) {
                 document.getElementById('resume-btn').style.display = 'inline-block';
             }
         };
 
-        // לכידת לחצן אחורה (Back Button)
         window.addEventListener("popstate", (e) => {
             if (document.getElementById('game-container').style.display === 'flex') {
                 const confirmExit = confirm("בטוחים שאתם רוצים לצאת למסך הראשי? (אל דאגה, המשחק נשמר אוטומטית ותוכלו לחזור אליו!)");
                 if (!confirmExit) {
-                    history.pushState(null, null, window.location.href); // מבטל את החזרה אחורה
+                    history.pushState(null, null, window.location.href);
                 } else {
                     goBackToSettings();
                 }
@@ -317,6 +353,7 @@
         let botDifficultyProb = 0.6; 
         let currentDisplayedOptions = []; 
         let currentThemeIcons = [];
+        let manualClosePending = false; 
 
         const fallbackIcons = ['🌍','🚀','💡','🎸','⏰','💎','🎲','🧩','🔬','🧬','🔭','💻','⚡','🪐','🧪','🔋','📡','🦠','🧲','🗽','🗼','🗻','🐫','🗺️','🏝️','⛩️','🏰','🗿','🏔️','🏜️','🌋','🎬','🎨','🎤','🎭','⚽','🍔','🏆','🎮','📸','🎧','🚗','🚲','⚓','🎈','🎯','🪄','🧸','📚','🔥'];
 
@@ -353,7 +390,6 @@
             selectedTheme = sub.id;
         }
 
-        // --- סאונד ---
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         let audioCtx; let isMuted = false;
         function initAudio() { if(!audioCtx && !isMuted) audioCtx = new AudioContext(); }
@@ -372,9 +408,7 @@
             clearInterval(timerInterval); 
             document.getElementById('game-container').style.display = 'none'; 
             document.getElementById('start-screen').style.display = 'flex';
-            if (localStorage.getItem('savedTriviaGame')) {
-                document.getElementById('resume-btn').style.display = 'inline-block';
-            }
+            if (localStorage.getItem('savedTriviaGame')) { document.getElementById('resume-btn').style.display = 'inline-block'; }
         }
         
         function selectDevice(dev) { document.querySelectorAll('#dev-desktop, #dev-mobile').forEach(b=>b.classList.remove('selected')); document.getElementById('dev-'+dev).classList.add('selected'); selectedDevice = dev; sessionStorage.setItem('doubleTriviaDevice', dev); const advSettings = document.getElementById('advanced-settings'); advSettings.style.display = 'flex'; advSettings.style.animation = 'fadeInDown 0.6s ease forwards'; }
@@ -384,14 +418,12 @@
 
         function initGame(isResume = false) {
             if(!selectedDevice) { alert("אנא בחרו מכשיר!"); return; }
-            if(!isResume && !window.qDB[selectedTheme]) { alert("שגיאה: קובץ השאלות טרם נטען. נסו שוב עוד שניה."); return; }
+            if(!isResume && !window.qDB[selectedTheme]) { alert("שגיאה: קובץ השאלות טרם נטען. נושא זה אולי חסר ב-config."); return; }
             
             initAudio(); 
             document.getElementById('start-screen').style.display = 'none'; 
             document.getElementById('game-container').style.display = 'flex';
             if(selectedDevice === 'mobile') document.body.classList.add('mobile-mode');
-
-            // דחיפת היסטוריה עבור מנגנון חזור
             history.pushState(null, null, window.location.href);
 
             if (!isResume) {
@@ -421,7 +453,7 @@
             document.getElementById('game-board').style.gridTemplateColumns = `repeat(${currentCols}, 1fr)`;
             renderScoreboard();
             renderBoard(isResume);
-            if(!isResume) saveGameState(); // שמירה ראשונית
+            if(!isResume) saveGameState(); 
         }
 
         function loadGameState() {
@@ -429,41 +461,25 @@
             if (!saved) return;
             const state = JSON.parse(saved);
             
-            selectedTheme = state.selectedTheme;
-            selectedPairs = state.selectedPairs;
-            gameMode = state.gameMode;
-            teams = state.teams;
-            activeTeamId = state.activeTeamId;
-            matchedPairsCount = state.matchedPairsCount;
-            cards = state.cards;
-            currentCols = state.currentCols;
-            currentThemeIcons = state.currentThemeIcons;
+            selectedTheme = state.selectedTheme; selectedPairs = state.selectedPairs; gameMode = state.gameMode;
+            teams = state.teams; activeTeamId = state.activeTeamId; matchedPairsCount = state.matchedPairsCount;
+            cards = state.cards; currentCols = state.currentCols; currentThemeIcons = state.currentThemeIcons;
             availableQuestions = state.availableQuestions;
 
-            initGame(true); // מעבר למצב חידוש
+            initGame(true);
 
-            // שחזור הקלפים הפתוחים
             document.querySelectorAll('.card').forEach((c, idx) => {
-                if (state.solvedIndices.includes(idx)) {
-                    c.classList.add('flipped', 'solved');
-                }
+                if (state.solvedIndices.includes(idx)) { c.classList.add('flipped', 'solved'); }
             });
         }
 
         function saveGameState() {
-            if (matchedPairsCount >= selectedPairs) return; // לא לשמור אם נגמר המשחק
-            
+            if (matchedPairsCount >= selectedPairs) return; 
             let solvedIndices = [];
             document.querySelectorAll('.card').forEach((c, idx) => {
                 if (c.classList.contains('solved')) solvedIndices.push(idx);
             });
-
-            const state = {
-                selectedTheme, selectedPairs, gameMode,
-                teams, activeTeamId, matchedPairsCount,
-                cards, solvedIndices, currentCols, currentThemeIcons,
-                availableQuestions
-            };
+            const state = { selectedTheme, selectedPairs, gameMode, teams, activeTeamId, matchedPairsCount, cards, solvedIndices, currentCols, currentThemeIcons, availableQuestions };
             localStorage.setItem('savedTriviaGame', JSON.stringify(state));
         }
 
@@ -516,13 +532,22 @@
             activeTeamId = (activeTeamId % teams.length) + 1;
             document.querySelectorAll('.team-score').forEach(el => el.classList.remove('active'));
             document.getElementById(`team-${activeTeamId}`).classList.add('active');
-            saveGameState(); // שמירה גם במעבר תור (כדי לשמור רצף טעויות/תור)
+            saveGameState(); 
             if(gameMode === 'bot' && activeTeamId === 2) { lockBoard = true; setTimeout(botPlay, 1000); } else { lockBoard = false; }
         }
 
         let isInfiniteTime = false;
 
+        function checkIfSerious() {
+            const t = window.qDB[selectedTheme] ? window.qDB[selectedTheme].title : "";
+            const regex = /פיזיקה|מתמטיקה|אזרחות|היסטוריה|מדעי המחשב|java|python|javascript|c#/i;
+            return regex.test(t) || regex.test(selectedTheme);
+        }
+
         function openTriviaModal() {
+            document.getElementById('close-q-btn').classList.add('hidden'); 
+            manualClosePending = false;
+
             const modal = document.getElementById('modal-overlay');
             document.getElementById('start-q-box').classList.remove('hidden');
             document.getElementById('question-content').classList.add('hidden');
@@ -583,7 +608,9 @@
             if (currentT.consecutiveFailures >= 5 && currentT.name !== "בוט אונליין 🤖") {
                 isInfiniteTime = true; timerEl.innerText = "∞"; timerEl.style.fontSize = "4rem"; timerEl.style.borderColor = "var(--active-team)"; timerEl.style.color = "var(--active-team)";
             } else {
-                isInfiniteTime = false; timeLeft = 15; timerEl.innerText = timeLeft; timerEl.style.fontSize = "3rem"; timerEl.style.borderColor = "white"; timerEl.style.color = "white";
+                isInfiniteTime = false; 
+                timeLeft = checkIfSerious() ? 30 : 15; 
+                timerEl.innerText = timeLeft; timerEl.style.fontSize = "3rem"; timerEl.style.borderColor = "white"; timerEl.style.color = "white";
                 timerInterval = setInterval(() => {
                     timeLeft--; timerEl.innerText = timeLeft;
                     if(timeLeft <= 5) { timerEl.style.borderColor = "#ef5350"; timerEl.style.color = "#ef5350"; }
@@ -638,13 +665,39 @@
             updateScoreboard(); 
             if(t.streak >= 3) { setTimeout(() => { showAnim('streak', `🔥 אש! ${t.streak} ברצף! 🔥`); }, 1500); }
             activePair[0].classList.add('solved'); activePair[1].classList.add('solved'); matchedPairsCount++;
-            saveGameState(); // שמירה גם אחרי זוג נכון
-            setTimeout(() => { closeModal(); checkEndGame(); }, 3000);
+            saveGameState(); 
+            
+            setTimeout(() => { finishQuestionTurn(true); }, 3000);
         }
 
         function failQuestion() {
             playSadSound(); showAnim('fail'); updateScoreboard();
-            setTimeout(() => { activePair[0].classList.remove('flipped'); activePair[1].classList.remove('flipped'); closeModal(); resetStreakAndNextTeam(); }, 4000); 
+            
+            if (checkIfSerious() && !(gameMode === 'bot' && activeTeamId === 2)) {
+                document.getElementById('close-q-btn').classList.remove('hidden');
+                manualClosePending = true;
+            } else {
+                setTimeout(() => { if(!manualClosePending) finishQuestionTurn(false); }, 4000); 
+            }
+        }
+
+        function closeModalManual() {
+            document.getElementById('close-q-btn').classList.add('hidden');
+            manualClosePending = false;
+            finishQuestionTurn(false);
+        }
+
+        function finishQuestionTurn(isSuccess) {
+            document.getElementById('modal-overlay').classList.remove('show'); 
+            if(!isSuccess) {
+                activePair[0].classList.remove('flipped'); 
+                activePair[1].classList.remove('flipped'); 
+                flippedCards = []; activePair = [];
+                resetStreakAndNextTeam();
+            } else {
+                flippedCards = []; activePair = [];
+                checkEndGame();
+            }
         }
 
         function updateScoreboard() {
@@ -659,7 +712,6 @@
             });
         }
 
-        function closeModal() { document.getElementById('modal-overlay').classList.remove('show'); flippedCards = []; activePair = []; }
         function checkEndGame() { if(matchedPairsCount >= selectedPairs) setTimeout(showEndScreen, 1500); else if(gameMode === 'bot' && activeTeamId === 2) { lockBoard = true; setTimeout(botPlay, 1000); } }
 
         function botPlay() {
@@ -686,57 +738,104 @@
             const colors = ['#ffca28', '#ab47bc', '#29b6f6', '#66bb6a', '#ec407a'];
             for (let i = 0; i < 150; i++) {
                 let conf = document.createElement('div');
-                conf.className = 'confetti';
-                conf.style.left = Math.random() * 100 + 'vw';
+                conf.className = 'confetti'; conf.style.left = Math.random() * 100 + 'vw';
                 conf.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
                 conf.style.top = '-10px';
                 document.getElementById('end-screen').appendChild(conf);
                 
-                let speed = Math.random() * 3 + 2;
-                let angle = Math.random() * 360;
+                let speed = Math.random() * 3 + 2; let angle = Math.random() * 360;
                 
                 let fall = setInterval(() => {
                     let currentTop = parseFloat(conf.style.top);
                     if (currentTop > window.innerHeight) { clearInterval(fall); conf.remove(); }
-                    conf.style.top = currentTop + speed + 'px';
-                    conf.style.transform = `rotate(${angle}deg)`;
-                    angle += 5;
+                    conf.style.top = currentTop + speed + 'px'; conf.style.transform = `rotate(${angle}deg)`; angle += 5;
                 }, 20);
             }
         }
 
+        let currentRating = 0;
+        function setRating(val) {
+            currentRating = val;
+            let stars = document.querySelectorAll('.star');
+            stars.forEach((star, index) => {
+                if (index < val) star.classList.add('active');
+                else star.classList.remove('active');
+            });
+        }
+function sendFeedback() {
+            const msg = document.getElementById('feedback-input').value;
+            
+            if(!msg && currentRating === 0) {
+                alert("אנא סמנו דירוג כוכבים או כתבו לנו משהו לפני השליחה 😊");
+                return;
+            }
+            
+            // הכניסי כאן בתוך המרכאות את הלינק שקיבלת מגוגל שיטס!
+            const googleSheetUrl = "https://script.google.com/macros/s/AKfycbzw2_ts1iAIXfZVaw2mn9AgX8Sr4g1gi0cGvNk8EAJB37cawCJjCerXeEsnRj75CNNk/exec"; 
+            
+            fetch(googleSheetUrl, {
+                method: 'POST',
+                mode: 'no-cors', // קריטי כדי שגוגל לא יחסום את הבקשה מהדפדפן
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ 
+                    "דירוג": currentRating > 0 ? currentRating + " מתוך 5 כוכבים" : "לא סומן דירוג",
+                    "הודעה": msg || "לא נכתב טקסט חופשי"
+                })
+            }).then(() => {
+                document.getElementById('feedback-section').innerHTML = "<h3 style='color:#69f0ae;'>תודה רבה! המשוב נשמר בטבלה בהצלחה 💖</h3>";
+            }).catch(error => {
+                document.getElementById('feedback-section').innerHTML = "<h3 style='color:#ffca28;'>תודה! (המשוב נשלח)</h3>";
+            });
+        }
+
         function showEndScreen() {
-            localStorage.removeItem('savedTriviaGame'); // מוחקים את השמירה כי המשחק נגמר
+            localStorage.removeItem('savedTriviaGame'); 
             document.getElementById('end-screen').classList.add('show');
+            
             let sortedTeams = [...teams].sort((a,b) => b.score - a.score);
+            sortedTeams[0].rank = 0; 
+            for(let i=1; i<sortedTeams.length; i++) {
+                if(sortedTeams[i].score === sortedTeams[i-1].score) {
+                    sortedTeams[i].rank = sortedTeams[i-1].rank; 
+                } else {
+                    sortedTeams[i].rank = i; 
+                }
+            }
             
             let podiumHTML = '';
             const placesStyles = ['p0', 'p1', 'p2', 'p3']; 
             
             const displayOrder = [];
-            if(teams.length === 1) displayOrder.push({t: sortedTeams[0], rank: 0});
-            else if(teams.length === 2) displayOrder.push({t: sortedTeams[1], rank: 1}, {t: sortedTeams[0], rank: 0});
-            else if(teams.length === 3) displayOrder.push({t: sortedTeams[1], rank: 1}, {t: sortedTeams[0], rank: 0}, {t: sortedTeams[2], rank: 2});
-            else displayOrder.push({t: sortedTeams[1], rank: 1}, {t: sortedTeams[0], rank: 0}, {t: sortedTeams[2], rank: 2}, {t: sortedTeams[3], rank: 3});
+            if(teams.length === 1) displayOrder.push(sortedTeams[0]);
+            else if(teams.length === 2) displayOrder.push(sortedTeams[1], sortedTeams[0]);
+            else if(teams.length === 3) displayOrder.push(sortedTeams[1], sortedTeams[0], sortedTeams[2]);
+            else displayOrder.push(sortedTeams[1], sortedTeams[0], sortedTeams[2], sortedTeams[3]);
 
-            displayOrder.forEach(item => {
+            displayOrder.forEach(t => {
+                let styleRank = t.rank > 3 ? 3 : t.rank; 
                 podiumHTML += `
-                <div class="podium-place ${placesStyles[item.rank]}" id="podium-rank-${item.rank}">
+                <div class="podium-place ${placesStyles[styleRank]}" id="podium-rank-${t.id}">
                     <div class="team-stats-podium">
-                        💡 מצאו: ${item.t.pairsFound} זוגות<br>
-                        🎯 ענו נכון: ${item.t.correctAnswers} פעמים
+                        💡 מצאו: ${t.pairsFound} זוגות שונים<br>
+                        🎯 ענו נכון: ${t.correctAnswers} פעמים
                     </div>
-                    <div class="team-name-podium">${item.t.name}</div>
-                    <span>${item.t.score} נק'</span>
+                    <div class="team-name-podium">${t.name}</div>
+                    <span>${t.score} נק'</span>
                 </div>`;
             });
             document.getElementById('podium').innerHTML = podiumHTML;
 
             let revealSequence = [];
-            if(teams.length >= 4) revealSequence.push({rank: 3, text: `במקום הרביעי... ${sortedTeams[3].name}!`});
-            if(teams.length >= 3) revealSequence.push({rank: 2, text: `במקום השלישי... ${sortedTeams[2].name}!`});
-            if(teams.length >= 2) revealSequence.push({rank: 1, text: `במקום השני... ${sortedTeams[1].name}!`});
-            if(teams.length >= 1) revealSequence.push({rank: 0, text: `ובמקום הראשון... ${sortedTeams[0].name}!!! 🏆`});
+            for (let i = sortedTeams.length - 1; i >= 0; i--) {
+                let text = "";
+                if(sortedTeams[i].rank === 0) text = `ובמקום הראשון... ${sortedTeams[i].name}!!! 🏆`;
+                else if(sortedTeams[i].rank === 1) text = `במקום השני... ${sortedTeams[i].name}!`;
+                else if(sortedTeams[i].rank === 2) text = `במקום השלישי... ${sortedTeams[i].name}!`;
+                else text = `במקום הרביעי... ${sortedTeams[i].name}!`;
+                revealSequence.push({ id: sortedTeams[i].id, text: text, isFirst: sortedTeams[i].rank === 0 });
+            }
 
             let announcer = document.getElementById('podium-announcer');
             let delay = 1000;
@@ -745,12 +844,13 @@
                 setTimeout(() => {
                     announcer.innerText = step.text;
                     announcer.classList.add('pop-anim');
-                    document.getElementById(`podium-rank-${step.rank}`).classList.add('revealed');
+                    document.getElementById(`podium-rank-${step.id}`).classList.add('revealed');
                     
-                    if (index === revealSequence.length - 1) {
+                    if (step.isFirst) {
                         playVictorySound();
                         fireConfetti();
                         document.getElementById('end-controls').style.display = 'block';
+                        document.getElementById('feedback-section').style.display = 'block'; 
                     } else {
                         playTone(400 + (index*100), 'sine', 0.4, 0, 0.2); 
                     }
