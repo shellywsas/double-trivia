@@ -149,7 +149,7 @@
         .podium-place.p3 { height: 30%; background: #607d8b; color: white; }
         
         .team-name-podium { position: absolute; top: -45px; font-weight: 900; font-size: 1.5rem; width: 100%; text-align: center; text-shadow: 1px 1px 3px rgba(0,0,0,0.8); color: white;}
-        .team-stats-podium { position: absolute; top: -85px; font-size: 1rem; color: #ffeb3b; width: 180px; text-align: center; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); line-height: 1.2; background: rgba(0,0,0,0.4); padding: 5px; border-radius: 10px;}
+        .team-stats-podium { position: absolute top: -85px; font-size: 1rem; color: #ffeb3b; width: 180px; text-align: center; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); line-height: 1.2; background: rgba(0,0,0,0.4); padding: 5px; border-radius: 10px;}
         
         #end-controls { display: none; margin-top: 30px; animation: fadeInDown 1s ease; position: relative; z-index: 10;}
         .credits { font-size: 1.5rem; font-weight: bold; color: rgba(255,255,255,0.9); text-shadow: 1px 1px 2px rgba(0,0,0,0.5); margin-top: 15px; }
@@ -309,25 +309,21 @@
         localStorage.setItem('trivia_visit_count', visits);
         let startTime = Date.now(); 
 
-        // דיווח כניסה שקט (מופעל אוטומטית כשהדף עולה)
+        // דיווח כניסה שקט (מעדכן את גוגל שיטס מיד כשהשחקן נכנס)
         function logSilentVisit() {
-            const googleSheetUrl = "https://script.google.com/macros/s/AKfycbzw2_ts1iAIXfZVaw2mn9AgX8Sr4g1gi0cGvNk8EAJB37cawCJjCerXeEsnRj75CNNk/exec";
+            const googleSheetUrl = "https://script.google.com/macros/s/AKfycbwfV4K48iRLCJ7B25kmuMmMZbnBw4Z5w1KBizf9_3rd7kMmD3PBuFMkeXlHg6--xT0H/exec";
             fetch(googleSheetUrl, {
                 method: 'POST',
                 mode: 'no-cors',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
                     "תאריך ושעה": new Date().toLocaleString('he-IL'),
+                    "מזהה": localStorage.getItem('trivia_user_id'),
+                    "מספר כניסות": visits,
                     "סוג אירוע": "כניסה למשחק 🚩",
-                    "מזהה שחקן ייחודי": localStorage.getItem('trivia_user_id'),
-                    "מספר כניסות לאתר": visits,
-                    "סוג מכשיר": window.innerWidth < 768 ? "טלפון נייד" : "מחשב/טאבלט",
-                    "רזולוציית מסך": window.screen.width + "x" + window.screen.height,
-                    "מקור הגעה (Referrer)": document.referrer || "כניסה ישירה",
-                    "נושא ששיחק": "-",
-                    "מצב משחק": "-",
+                    "נושא": "-",
                     "זמן משחק (דקות)": "-",
-                    "דירוג כוכבים": "-",
+                    "דירוג": "-",
                     "הודעת משוב": "-"
                 })
             }).catch(e => console.log("Silent log failed"));
@@ -616,7 +612,7 @@
 
             currentDisplayedOptions = validOptions;
             
-            // שימוש בטיימר הספציפי של השאלה אם הוגדר
+            // תיקון חשוב לטיימר: שימוש באורך המערך במקום באורך השאלה
             let qTimer = qData.length > 6 ? qData[6] : null;
             currentQuestionObj = { q: qData[0], timer: qTimer };
 
@@ -820,8 +816,7 @@
             btn.disabled = true;
             btn.innerText = "שולח... ⏳";
             
-            // הכניסי כאן את הקישור שלך מה-Google Apps Script!
-            const googleSheetUrl = "https://script.google.com/macros/s/AKfycbyqEdd-5EGy9mL6LYFcqEaLMGwBPzUABrhjeD1gXl-srPt0PtWRmPJ3XdWPrwgeJ3cr/exec"; 
+            const googleSheetUrl = "https://script.google.com/macros/s/AKfycbwfV4K48iRLCJ7B25kmuMmMZbnBw4Z5w1KBizf9_3rd7kMmD3PBuFMkeXlHg6--xT0H/exec"; 
             
             let timeSpent = Math.round((Date.now() - startTime) / 1000 / 60);
             let themeName = window.qDB[selectedTheme] ? window.qDB[selectedTheme].title : selectedTheme;
@@ -832,16 +827,12 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
                     "תאריך ושעה": new Date().toLocaleString('he-IL'),
-                    "סוג אירוע": "סיום ומשוב 💬",
-                    "מזהה שחקן ייחודי": localStorage.getItem('trivia_user_id'),
-                    "מספר כניסות לאתר": localStorage.getItem('trivia_visit_count'),
-                    "סוג מכשיר": selectedDevice === 'mobile' ? "טלפון נייד" : "מחשב/טאבלט",
-                    "רזולוציית מסך": window.screen.width + "x" + window.screen.height,
-                    "מקור הגעה (Referrer)": "-",
-                    "נושא ששיחק": themeName,
-                    "מצב משחק": gameMode === 'bot' ? "נגד בוט" : gameMode + " קבוצות",
+                    "מזהה": localStorage.getItem('trivia_user_id'),
+                    "מספר כניסות": localStorage.getItem('trivia_visit_count'),
+                    "סוג אירוע": "שליחת משוב בסיום 💬",
+                    "נושא": themeName,
                     "זמן משחק (דקות)": timeSpent,
-                    "דירוג כוכבים": currentRating > 0 ? currentRating + "/5" : "לא דורג",
+                    "דירוג": currentRating > 0 ? currentRating + "/5" : "-",
                     "הודעת משוב": msg || "ללא טקסט"
                 })
             }).then(() => {
