@@ -149,7 +149,7 @@
         .podium-place.p3 { height: 30%; background: #607d8b; color: white; }
         
         .team-name-podium { position: absolute; top: -45px; font-weight: 900; font-size: 1.5rem; width: 100%; text-align: center; text-shadow: 1px 1px 3px rgba(0,0,0,0.8); color: white;}
-        .team-stats-podium { position: absolute top: -85px; font-size: 1rem; color: #ffeb3b; width: 180px; text-align: center; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); line-height: 1.2; background: rgba(0,0,0,0.4); padding: 5px; border-radius: 10px;}
+        .team-stats-podium { position: absolute; top: -85px; font-size: 1rem; color: #ffeb3b; width: 180px; text-align: center; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); line-height: 1.2; background: rgba(0,0,0,0.4); padding: 5px; border-radius: 10px;}
         
         #end-controls { display: none; margin-top: 30px; animation: fadeInDown 1s ease; position: relative; z-index: 10;}
         .credits { font-size: 1.5rem; font-weight: bold; color: rgba(255,255,255,0.9); text-shadow: 1px 1px 2px rgba(0,0,0,0.5); margin-top: 15px; }
@@ -197,10 +197,10 @@
             </div>
 
             <div class="settings-group" id="bot-diff-group" style="display: none; background: #e8eaf6;">
-                <div class="settings-title" style="color: #3f51b5;">רמת קושי של הבוט:</div>
-                <button class="option-btn bot-diff-btn diff-easy" onclick="selectBotDiff('easy', 0.3)">🟢 קל</button>
-                <button class="option-btn bot-diff-btn diff-medium selected" onclick="selectBotDiff('medium', 0.6)">🟡 בינוני</button>
-                <button class="option-btn bot-diff-btn diff-hard" onclick="selectBotDiff('hard', 0.9)">🔴 קשה</button>
+                <div class="settings-title" style="color: #3f51b5;">רמת החוכמה של הבוט 🤖<br><span style="font-size: 1rem; font-weight: normal; color: #5c6bc0;">(משפיע על הזיכרון והידע של הבוט, לא על השאלות)</span></div>
+                <button class="option-btn bot-diff-btn diff-easy" onclick="selectBotDiff('easy', 0.6, 0.2)">🟢 קל</button>
+                <button class="option-btn bot-diff-btn diff-medium selected" onclick="selectBotDiff('medium', 0.85, 0.5)">🟡 בינוני</button>
+                <button class="option-btn bot-diff-btn diff-hard" onclick="selectBotDiff('hard', 0.98, 0.85)">🔴 קשה</button>
             </div>
 
             <div class="settings-group" id="main-themes-group">
@@ -305,12 +305,10 @@
             localStorage.setItem('trivia_games_finished', 0);
         }
         
-        let visits = parseInt(localStorage.getItem('trivia_visit_count')) + 1;
-        localStorage.setItem('trivia_visit_count', visits);
         let startTime = Date.now(); 
 
-        // דיווח כניסה שקט (מעדכן את גוגל שיטס מיד כשהשחקן נכנס)
-        function logSilentVisit() {
+        // דיווח גנרי לגוגל שיטס כדי למנוע כפילויות קוד
+        function logEventToSheets(eventType, themeName, timeSpent, rating, msg) {
             const googleSheetUrl = "https://script.google.com/macros/s/AKfycbwfV4K48iRLCJ7B25kmuMmMZbnBw4Z5w1KBizf9_3rd7kMmD3PBuFMkeXlHg6--xT0H/exec";
             fetch(googleSheetUrl, {
                 method: 'POST',
@@ -319,18 +317,25 @@
                 body: JSON.stringify({ 
                     "תאריך ושעה": new Date().toLocaleString('he-IL'),
                     "מזהה": localStorage.getItem('trivia_user_id'),
-                    "מספר כניסות": visits,
-                    "סוג אירוע": "כניסה למשחק 🚩",
-                    "נושא": "-",
-                    "זמן משחק (דקות)": "-",
-                    "דירוג": "-",
-                    "הודעת משוב": "-"
+                    "מספר כניסות": localStorage.getItem('trivia_visit_count'),
+                    "סוג אירוע": eventType,
+                    "נושא": themeName || "-",
+                    "זמן משחק (דקות)": timeSpent || "-",
+                    "דירוג": rating || "-",
+                    "הודעת משוב": msg || "-"
                 })
-            }).catch(e => console.log("Silent log failed"));
+            }).catch(e => console.log("Log failed"));
         }
 
         window.onload = () => {
-            logSilentVisit(); 
+            // דיווח "כניסה לאתר" יתבצע *רק* אם זה סשן חדש ולא ריענון של סוף משחק
+            if (!sessionStorage.getItem('trivia_active_session')) {
+                let visits = parseInt(localStorage.getItem('trivia_visit_count')) + 1;
+                localStorage.setItem('trivia_visit_count', visits);
+                sessionStorage.setItem('trivia_active_session', 'true');
+                
+                logEventToSheets("כניסה לאתר 🌐", "-", "-", "-", window.innerWidth < 768 ? "מכשיר: נייד" : "מכשיר: מחשב");
+            }
 
             if (typeof gameConfig !== 'undefined') {
                 loadAllQuestionFiles();
@@ -384,7 +389,8 @@
         let timerInterval, timeLeft = 15, currentCols = 8, matchedPairsCount = 0;
         let teams = [], currentQuestionObj = null, lockBoard = false;
         let availableQuestions = [];
-        let botDifficultyProb = 0.6; 
+        let botTriviaProb = 0.85; 
+        let botMemoryProb = 0.5;  
         let currentDisplayedOptions = []; 
         let currentThemeIcons = [];
         let manualClosePending = false; 
@@ -448,7 +454,13 @@
         function selectDevice(dev) { document.querySelectorAll('#dev-desktop, #dev-mobile').forEach(b=>b.classList.remove('selected')); document.getElementById('dev-'+dev).classList.add('selected'); selectedDevice = dev; sessionStorage.setItem('doubleTriviaDevice', dev); const advSettings = document.getElementById('advanced-settings'); advSettings.style.display = 'flex'; advSettings.style.animation = 'fadeInDown 0.6s ease forwards'; }
         function selectPairs(num) { document.querySelectorAll('.pair-option').forEach(btn => btn.classList.remove('selected')); event.target.classList.add('selected'); selectedPairs = num; }
         function selectPlayers(mode) { document.querySelectorAll('.player-option').forEach(btn => btn.classList.remove('selected')); event.target.classList.add('selected'); gameMode = mode; document.getElementById('bot-diff-group').style.display = (mode === 'bot') ? 'block' : 'none'; }
-        function selectBotDiff(level, prob) { document.querySelectorAll('.bot-diff-btn').forEach(btn => btn.classList.remove('selected')); event.target.classList.add('selected'); botDifficultyProb = prob; }
+        
+        function selectBotDiff(level, tProb, mProb) { 
+            document.querySelectorAll('.bot-diff-btn').forEach(btn => btn.classList.remove('selected')); 
+            event.target.classList.add('selected'); 
+            botTriviaProb = tProb; 
+            botMemoryProb = mProb; 
+        }
 
         function initGame(isResume = false) {
             if(!selectedDevice) { alert("אנא בחרו מכשיר!"); return; }
@@ -482,6 +494,11 @@
                 const gameIcons = combinedIcons.slice(0, selectedPairs);
                 cards = []; gameIcons.forEach((icon) => { cards.push(icon); cards.push(icon); });
                 shuffle(cards); 
+
+                // דיווח התחלת משחק
+                startTime = Date.now();
+                let themeName = window.qDB[selectedTheme] ? window.qDB[selectedTheme].title : selectedTheme;
+                logEventToSheets("התחיל משחק 🎮", themeName, "-", "-", `הגדרות: מצב ${gameMode}, זוגות: ${selectedPairs}`);
             }
 
             document.getElementById('game-board').style.gridTemplateColumns = `repeat(${currentCols}, 1fr)`;
@@ -499,6 +516,9 @@
             teams = state.teams; activeTeamId = state.activeTeamId; matchedPairsCount = state.matchedPairsCount;
             cards = state.cards; currentCols = state.currentCols; currentThemeIcons = state.currentThemeIcons;
             availableQuestions = state.availableQuestions;
+            
+            botTriviaProb = state.botTriviaProb !== undefined ? state.botTriviaProb : 0.85;
+            botMemoryProb = state.botMemoryProb !== undefined ? state.botMemoryProb : 0.5;
 
             initGame(true);
 
@@ -513,7 +533,7 @@
             document.querySelectorAll('.card').forEach((c, idx) => {
                 if (c.classList.contains('solved')) solvedIndices.push(idx);
             });
-            const state = { selectedTheme, selectedPairs, gameMode, teams, activeTeamId, matchedPairsCount, cards, solvedIndices, currentCols, currentThemeIcons, availableQuestions };
+            const state = { selectedTheme, selectedPairs, gameMode, teams, activeTeamId, matchedPairsCount, cards, solvedIndices, currentCols, currentThemeIcons, availableQuestions, botTriviaProb, botMemoryProb };
             localStorage.setItem('savedTriviaGame', JSON.stringify(state));
         }
 
@@ -612,7 +632,6 @@
 
             currentDisplayedOptions = validOptions;
             
-            // תיקון חשוב לטיימר: שימוש באורך המערך במקום באורך השאלה
             let qTimer = qData.length > 6 ? qData[6] : null;
             currentQuestionObj = { q: qData[0], timer: qTimer };
 
@@ -758,13 +777,38 @@
         function botPlay() {
             let available = Array.from(document.querySelectorAll('.card:not(.solved):not(.flipped)'));
             if(available.length < 2) return;
-            let c1 = available[Math.floor(Math.random() * available.length)]; flipCard.call(c1);
-            setTimeout(() => { available = Array.from(document.querySelectorAll('.card:not(.solved):not(.flipped)')); let c2 = available[Math.floor(Math.random() * available.length)]; flipCard.call(c2); }, 800);
+            
+            let c1, c2;
+
+            if (Math.random() < botMemoryProb) {
+                let iconMap = {};
+                available.forEach(c => {
+                    let icon = c.dataset.icon;
+                    if(!iconMap[icon]) iconMap[icon] = [];
+                    iconMap[icon].push(c);
+                });
+                
+                let pairedIcons = Object.values(iconMap).filter(arr => arr.length === 2);
+                if (pairedIcons.length > 0) {
+                    let chosenPair = pairedIcons[Math.floor(Math.random() * pairedIcons.length)];
+                    c1 = chosenPair[0];
+                    c2 = chosenPair[1];
+                }
+            }
+            
+            if (!c1 || !c2) {
+                c1 = available[Math.floor(Math.random() * available.length)];
+                let remaining = available.filter(c => c !== c1);
+                c2 = remaining[Math.floor(Math.random() * remaining.length)];
+            }
+            
+            flipCard.call(c1);
+            setTimeout(() => { flipCard.call(c2); }, 800);
         }
 
         function botAnswerTrivia() {
             if(timeLeft <= 0) return;
-            let isCorrect = Math.random() < botDifficultyProb; 
+            let isCorrect = Math.random() < botTriviaProb; 
             let correctIndex = getCorrectOptionIndex();
             let chosen;
             if(isCorrect) { chosen = correctIndex; } 
@@ -816,30 +860,15 @@
             btn.disabled = true;
             btn.innerText = "שולח... ⏳";
             
-            const googleSheetUrl = "https://script.google.com/macros/s/AKfycbwfV4K48iRLCJ7B25kmuMmMZbnBw4Z5w1KBizf9_3rd7kMmD3PBuFMkeXlHg6--xT0H/exec"; 
-            
             let timeSpent = Math.round((Date.now() - startTime) / 1000 / 60);
             let themeName = window.qDB[selectedTheme] ? window.qDB[selectedTheme].title : selectedTheme;
 
-            fetch(googleSheetUrl, {
-                method: 'POST',
-                mode: 'no-cors', 
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    "תאריך ושעה": new Date().toLocaleString('he-IL'),
-                    "מזהה": localStorage.getItem('trivia_user_id'),
-                    "מספר כניסות": localStorage.getItem('trivia_visit_count'),
-                    "סוג אירוע": "שליחת משוב בסיום 💬",
-                    "נושא": themeName,
-                    "זמן משחק (דקות)": timeSpent,
-                    "דירוג": currentRating > 0 ? currentRating + "/5" : "-",
-                    "הודעת משוב": msg || "ללא טקסט"
-                })
-            }).then(() => {
+            logEventToSheets("משוב שחקן 💬", themeName, timeSpent, currentRating > 0 ? currentRating + "/5" : "-", msg);
+            
+            // תצוגת הצלחה זמנית כי השליחה היא ברקע
+            setTimeout(() => {
                 document.getElementById('feedback-section').innerHTML = "<h3 style='color:#69f0ae;'>תודה רבה! המשוב נשמר בטבלה בהצלחה 💖</h3>";
-            }).catch(error => {
-                document.getElementById('feedback-section').innerHTML = "<h3 style='color:#ffca28;'>תודה! (המשוב נשלח)</h3>";
-            });
+            }, 1500);
         }
 
         function showEndScreen() {
@@ -850,6 +879,10 @@
 
             document.getElementById('end-screen').classList.add('show');
             
+            let timeSpent = Math.round((Date.now() - startTime) / 1000 / 60);
+            let themeName = window.qDB[selectedTheme] ? window.qDB[selectedTheme].title : selectedTheme;
+            logEventToSheets("סיים משחק 🏆", themeName, timeSpent, "-", `סיים בסך הכל ${finished} משחקים אי פעם`);
+
             let sortedTeams = [...teams].sort((a,b) => b.score - a.score);
             sortedTeams[0].rank = 0; 
             for(let i=1; i<sortedTeams.length; i++) {
