@@ -1,0 +1,1491 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>דאבל טריוויה - המהדורה המקצועית</title>
+    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;700;900&display=swap" rel="stylesheet">
+    
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-database-compat.js"></script>
+
+    <script src="config.js"></script>
+
+    <style>
+        :root {
+            --primary: #4a4a4a; --bg-color: #fce4ec; --card-bg: #ab47bc; --card-flipped: #ffffff;
+            --opt-a: #ffb6c1; --opt-b: #dda0dd; --opt-c: #fffacd; --opt-d: #add8e6; 
+            --active-team: #ffca28; --glass-bg: rgba(255, 255, 255, 0.85);
+        }
+
+        body {
+            font-family: 'Heebo', sans-serif; background-color: var(--bg-color);
+            background-image: radial-gradient(circle at top left, #fff0f5 0%, #fce4ec 100%);
+            color: var(--primary); margin: 0; padding: 0;
+            height: 100vh; width: 100vw; display: flex;
+            flex-direction: column; box-sizing: border-box; overflow: hidden;
+        }
+
+        body.mobile-mode { height: auto; min-height: 100vh; overflow-y: auto; overflow-x: hidden; }
+        body.mobile-mode #game-container { height: auto; padding-bottom: 50px; }
+        body.mobile-mode .card-face { font-size: min(10vw, 8vh); }
+        body.mobile-mode .coord-label { font-size: 4vw; }
+        body.mobile-mode #answers-grid { grid-template-columns: 1fr; gap: 10px; height: auto; }
+        body.mobile-mode .mcq-btn { font-size: 1.2rem; padding: 12px; white-space: normal; height: auto; min-height: 60px; line-height: 1.3; }
+        body.mobile-mode #question-text { font-size: 1.6rem; }
+
+        h1 { margin: 5px 0; font-size: 2.5vh; text-align: center; color: var(--card-bg); font-weight: 900; }
+
+        .overlay-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+            background: rgba(252, 228, 236, 0.95); z-index: 100; backdrop-filter: blur(10px);
+            overflow-y: auto; padding: 20px 0; scroll-behavior: smooth;
+        }
+
+        .settings-group {
+            margin: 10px 0; padding: 20px; background: white; width: 90%; max-width: 700px;
+            border-radius: 20px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+        }
+
+        .settings-title { font-size: 1.3rem; margin-bottom: 10px; font-weight: 900; color: var(--card-bg); }
+
+        .option-btn {
+            background-color: #f0f2f5; color: var(--primary); border: 2px solid transparent;
+            padding: 8px 15px; font-size: 1.1rem; font-weight: bold; margin: 4px;
+            border-radius: 12px; cursor: pointer; transition: all 0.2s;
+        }
+        .option-btn.selected { background-color: var(--card-bg); color: white; transform: translateY(-3px); box-shadow: 0 5px 15px rgba(171, 71, 188, 0.4); }
+        
+        .bot-btn { background-color: #5c6bc0; color: white; }
+        .bot-btn.selected { background-color: #3f51b5; box-shadow: 0 5px 15px rgba(63, 81, 181, 0.5); }
+        
+        .diff-easy.selected { background-color: #66bb6a; color: white; }
+        .diff-medium.selected { background-color: #ffa726; color: black; }
+        .diff-hard.selected { background-color: #ef5350; color: white; }
+
+        .start-btn {
+            background-color: #ec407a; color: white; border: none; padding: 15px 50px; font-size: 2rem; 
+            font-weight: 900; margin: 15px 0; border-radius: 50px; cursor: pointer; box-shadow: 0 8px 0 #ad1457; transition: all 0.1s;
+        }
+        .start-btn:active:not(:disabled) { transform: translateY(8px); box-shadow: 0 0 0 #ad1457; }
+        .start-btn:disabled { opacity: 0.7; cursor: not-allowed; }
+        .info-btn { background-color: #29b6f6; font-size: 1.2rem; padding: 10px 20px; box-shadow: 0 5px 0 #0288d1; margin-bottom: 15px;}
+        .resume-btn { background-color: #ffb300; box-shadow: 0 5px 0 #ff8f00; color: black; }
+
+        @keyframes fadeInDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+
+        #game-container { display: none; flex-direction: column; width: 100%; height: 100%; padding: 10px; box-sizing: border-box; }
+        #top-controls { display: flex; justify-content: space-between; width: 100%; max-width: 1500px; margin: 0 auto 10px auto; }
+        .control-btn { background: #8e24aa; color: white; border: none; padding: 8px 20px; border-radius: 12px; cursor: pointer; font-weight: bold; font-size: 1.1rem; box-shadow: 0 4px 0 rgba(0,0,0,0.2); }
+        .control-btn:active { transform: translateY(4px); box-shadow: 0 0 0 rgba(0,0,0,0); }
+        .control-btn.muted { background: #ef5350; }
+
+        /* לוח תוצאות שמציג רק את התור הנוכחי */
+        #scoreboard { 
+            display: flex; justify-content: center; align-items: center; min-height: 8vh; 
+            background: rgba(255,255,255,0.9); backdrop-filter: blur(10px); border-radius: 20px; 
+            margin-bottom: 10px; padding: 10px; border: 3px solid var(--active-team); 
+            box-shadow: 0 10px 25px rgba(255, 202, 40, 0.4);
+        }
+        .team-score { text-align: center; font-size: 1.4rem; font-weight: bold; padding: 5px 15px; width: 100%; }
+        .team-score span { display: block; font-size: 2.2rem; font-weight: 900; color: var(--card-bg); margin: 5px 0;}
+        .streak-icon { font-size: 1rem; color: #ff5722; display: none; }
+        .mercy-icon { font-size: 0.9rem; color: #e53935; display: none; }
+
+        #game-board { display: grid; flex: 1; gap: 6px; perspective: 1000px; width: 100%; max-width: 1500px; margin: 0 auto; }
+        .card { width: 100%; height: 100%; min-height: 50px; cursor: pointer; position: relative; transform-style: preserve-3d; transition: transform 0.5s; }
+        .card.flipped, .card.solved { transform: rotateY(180deg); }
+        .card.solved { pointer-events: none; }
+        .card.solved .card-back { border: 4px solid #66bb6a; background-color: #f0fdf4; box-shadow: 0 0 15px rgba(102, 187, 106, 0.6); }
+
+        .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; display: flex; align-items: center; justify-content: center; border-radius: 10px; box-shadow: 0 3px 6px rgba(0,0,0,0.2); user-select: none; }
+        .card-front { background-color: var(--card-bg); font-size: min(4vw, 5vh); color: white; background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.05) 0px, rgba(255,255,255,0.05) 10px, transparent 10px, transparent 20px); border: 2px solid rgba(255,255,255,0.3); }
+        .coord-label { font-size: min(2vw, 3vh); font-weight: 900; color: rgba(255,255,255,0.9); }
+        
+        .card-back { background-color: var(--card-flipped); font-size: min(10vw, 12vh); transform: rotateY(180deg); border: 3px solid var(--card-bg); }
+
+        #modal-overlay, #instructions-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(8px); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 2000; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+        #modal-overlay.show, #instructions-modal.show { opacity: 1; pointer-events: all; }
+
+        .modal-box { position: relative; background: white; padding: 20px; border-radius: 25px; text-align: center; width: 90%; max-width: 900px; max-height: 85vh; overflow-y: auto; box-shadow: 0 15px 40px rgba(0,0,0,0.3); border: 5px solid white;}
+        .topic-badge { background: var(--card-bg); color: white; padding: 5px 20px; border-radius: 20px; font-weight: bold; display: inline-block; margin-bottom: 10px; }
+        #question-text { font-size: 2.2rem; font-weight: 900; color: var(--primary); line-height: 1.3; margin-bottom: 15px;}
+        #timer-container { width: 80px; height: 80px; background: var(--card-bg); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px auto; color: white; font-size: 3rem; font-weight: 900; border: 4px solid white; transition: all 0.3s;}
+
+        #close-q-btn {
+            position: absolute; top: 15px; left: 15px; background: #ef5350; color: white; border: 2px solid #b71c1c;
+            border-radius: 50%; width: 45px; height: 45px; font-size: 1.8rem; font-weight: bold;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2); transition: transform 0.2s; z-index: 50;
+        }
+        #close-q-btn:hover { transform: scale(1.1); background: #f44336; }
+
+        #answers-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 100%; }
+        .mcq-btn { border: 3px solid transparent; color: #333; font-size: 1.6rem; font-weight: bold; border-radius: 15px; cursor: pointer; padding: 15px 20px; text-align: right; box-shadow: 0 4px 10px rgba(0,0,0,0.08); transition: transform 0.1s, opacity 0.3s, background-color 0.3s; display: flex; align-items: center; position: relative; }
+        .mcq-btn:active:not(:disabled) { transform: translateY(4px); box-shadow: 0 0 0 rgba(0,0,0,0); }
+        .mcq-btn:disabled { cursor: not-allowed; }
+        
+        .opt-color-0 { background-color: var(--opt-a); } 
+        .opt-color-1 { background-color: var(--opt-b); } 
+        .opt-color-2 { background-color: var(--opt-c); } 
+        .opt-color-3 { background-color: var(--opt-d); }
+
+        .mcq-btn.wrong-ans { opacity: 0.3; filter: grayscale(80%); }
+        .mcq-btn.selected-wrong { background-color: #ef5350 !important; color: white; opacity: 1; filter: none; border-color: #b71c1c; }
+        .mcq-btn.correct-ans { animation: pulseBtn 1s infinite; z-index: 10; background-color: #69f0ae !important; border: 4px solid #00e676; color: #000; font-weight: 900; box-shadow: 0 0 20px rgba(0, 230, 118, 0.6); opacity: 1 !important; filter: none !important; }
+
+        .feedback-anim { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0); font-size: 6rem; font-weight: 900; text-shadow: 0 10px 30px rgba(0,0,0,0.6); z-index: 3000; pointer-events: none; opacity: 0; text-align: center; width: 100%; }
+        .anim-success { color: #69f0ae; animation: popFeedback 2.5s forwards; }
+        .anim-fail { color: #ef5350; animation: popFeedback 2.5s forwards; }
+        .anim-streak { color: #ff5722; animation: popFeedback 3s forwards; font-size: 5rem; text-shadow: 0 0 20px yellow; }
+
+        @keyframes popFeedback { 0% { transform: translate(-50%, -50%) scale(0) rotate(-10deg); opacity: 0; } 15% { transform: translate(-50%, -50%) scale(1.2) rotate(5deg); opacity: 1; } 85% { transform: translate(-50%, -50%) scale(1) rotate(0deg); opacity: 1; } 100% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; } }
+        @keyframes pulseBtn { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+
+        #end-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(171, 71, 188, 0.95); color: white; z-index: 4000; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 1s; text-align: center; overflow-y: auto; overflow-x: hidden; padding: 20px 0;}
+        #end-screen.show { opacity: 1; pointer-events: all; }
+        #podium-announcer { font-size: 3.5rem; height: 5rem; font-weight: 900; text-shadow: 0 5px 15px rgba(0,0,0,0.5); transition: all 0.3s; margin-bottom: 20px; color: var(--active-team); }
+        #podium { display: flex; align-items: flex-end; justify-content: center; gap: 15px; margin: 30px 0; height: 35vh; width: 100%; }
+        
+        .podium-place { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; width: 140px; background: rgba(255,255,255,0.2); border-radius: 15px 15px 0 0; position: relative; opacity: 0; transform: translateY(50px); transition: all 0.5s ease-out; }
+        .podium-place.revealed { opacity: 1; transform: translateY(0); }
+        .podium-place span { font-size: 2rem; font-weight: bold; padding: 5px; }
+        .podium-place.p0 { height: 100%; background: linear-gradient(to top, #ffd700, #ffea00); color: black; box-shadow: 0 -5px 20px rgba(255,215,0,0.5); }
+        .podium-place.p1 { height: 75%; background: linear-gradient(to top, #c0c0c0, #e0e0e0); color: black; }
+        .podium-place.p2 { height: 50%; background: linear-gradient(to top, #cd7f32, #d2691e); color: black; }
+        .podium-place.p3 { height: 30%; background: #607d8b; color: white; }
+        
+        .team-name-podium { position: absolute; top: -45px; font-weight: 900; font-size: 1.5rem; width: 100%; text-align: center; text-shadow: 1px 1px 3px rgba(0,0,0,0.8); color: white;}
+        .team-stats-podium { position: absolute; top: -85px; font-size: 1rem; color: #ffeb3b; width: 180px; text-align: center; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); line-height: 1.2; background: rgba(0,0,0,0.4); padding: 5px; border-radius: 10px;}
+        
+        #end-controls { display: none; margin-top: 30px; animation: fadeInDown 1s ease; position: relative; z-index: 10; width: 100%;}
+        .credits { font-size: 1.5rem; font-weight: bold; color: rgba(255,255,255,0.9); text-shadow: 1px 1px 2px rgba(0,0,0,0.5); margin-top: 15px; }
+        .hidden { display: none !important; }
+        @keyframes popScore { 0% { transform: scale(1); } 50% { transform: scale(1.6); color: #69f0ae; } 100% { transform: scale(1); } }
+        .pop-anim { animation: popScore 0.8s ease; }
+
+        .confetti { position: absolute; width: 10px; height: 10px; background-color: #f00; z-index: 5; }
+
+        #feedback-section { margin-top: 25px; background: rgba(0,0,0,0.3); padding: 20px; border-radius: 15px; border: 2px solid white; display: none; margin-left: auto; margin-right: auto; width: 90%; max-width: 600px;}
+        #feedback-section h3 { margin: 0 0 10px 0; font-size: 1.3rem; }
+        #feedback-input { width: 90%; padding: 10px; border-radius: 10px; border: none; font-family: inherit; font-size: 1rem; margin-bottom: 10px; resize: none;}
+        #feedback-btn { background: #69f0ae; color: black; font-weight: bold; padding: 8px 20px; border: none; border-radius: 10px; cursor: pointer; font-size: 1.1rem; transition: 0.3s;}
+        
+        .star-rating { display: flex; justify-content: center; gap: 10px; margin-bottom: 15px; direction: ltr; }
+        .star { font-size: 2.5rem; color: #ccc; cursor: pointer; transition: color 0.2s; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+        .star.active { color: #ffca28; }
+
+        /* --- פודיום מותאם לטלפון - מעלים הכל ומציג אחד אחד --- */
+        @media (max-width: 600px) {
+            #podium {
+                flex-direction: column; height: auto; align-items: center; justify-content: center; margin: 10px 0;
+            }
+            .podium-place {
+                display: none; /* מוסתר כברירת מחדל עד לתורו באנימציה */
+                width: 80%; height: auto !important; padding: 25px 15px; border-radius: 20px;
+                flex-direction: column; justify-content: center; transform: scale(0.5);
+            }
+            .podium-place.revealed { display: flex; transform: scale(1); }
+            .team-name-podium { position: static; color: black; text-shadow: none; font-size: 2rem; margin-top: 10px; }
+            .team-stats-podium { position: static; color: #333; text-shadow: none; background: rgba(255,255,255,0.5); font-size: 1.1rem; width: auto; margin-bottom: 10px; }
+            .podium-place.p3 .team-name-podium, .podium-place.p3 .team-stats-podium { color: white; }
+            #podium-announcer { font-size: 2rem; height: auto; min-height: 4rem; margin-bottom: 5px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="start-screen" class="overlay-screen">
+        <h1 style="font-size:4rem; margin-bottom: 5px;">דאבל טריוויה 🎯</h1>
+        <button class="start-btn info-btn" onclick="document.getElementById('instructions-modal').classList.add('show')">איך משחקים / משחקות?</button>
+        
+        <button id="resume-btn" class="start-btn info-btn resume-btn" style="display:none;" onclick="loadGameState()">🔄 המשך משחק שנשמר</button>
+
+        <div class="settings-group" id="device-selection-group">
+            <div class="settings-title">כדי להתחיל, באיזה מכשיר אתם/ן?</div>
+            <button class="option-btn" id="dev-desktop" onclick="selectDevice('desktop')">💻 מחשב (לזום)</button>
+            <button class="option-btn" id="dev-mobile" onclick="selectDevice('mobile')">📱 טלפון נייד</button>
+        </div>
+
+        <div id="network-selection-group" class="settings-group" style="display: none;">
+            <div class="settings-title">איך רוצים לשחק?</div>
+            <button class="option-btn" style="background-color: #66bb6a; color: white; padding: 12px 25px; font-size: 1.3rem;" onclick="chooseNetwork('local')">🕹️ משחק רגיל (על מסך אחד)</button>
+            <br><br>
+            <button class="option-btn" style="background-color: #ff9800; color: white; padding: 12px 25px; font-size: 1.3rem;" onclick="chooseNetwork('online')">🌐 משחק עם חברים</button>
+        </div>
+
+        <div id="advanced-settings" style="display: none; width: 100%; flex-direction: column; align-items: center;">
+            
+            <div class="settings-group" id="online-role-group" style="display: none; background: #fff3e0; border: 3px solid #ff9800;">
+                <div class="settings-title" style="color: #e65100;">מה התפקיד שלך? 🌐</div>
+                <button class="option-btn" style="background-color: #f57c00; color: white;" onclick="selectOnlineRole('host')">🏠 אני פותח/ת חדר (מארח)</button>
+                <button class="option-btn" style="background-color: #ffb300; color: black;" onclick="selectOnlineRole('guest')">🚪 יש לי קוד לחדר (אורח)</button>
+            </div>
+
+            <div class="settings-group" id="online-guest-lobby" style="display: none; background: #fff3e0; border: 3px solid #ffb300;">
+                <input type="text" id="guest-name-input" placeholder="איך קוראים לך?" style="width: 80%; padding: 10px; border-radius: 10px; border: 2px solid #ffb74d; font-size: 1.2rem; text-align: center; font-family: inherit; margin-bottom: 10px;">
+                <input type="text" id="room-code-input" placeholder="הקלד/י קוד חדר בן 4 ספרות..." style="width: 80%; padding: 10px; border-radius: 10px; border: 2px solid #ffb74d; font-size: 1.2rem; text-align: center; font-family: inherit; margin-bottom: 10px; letter-spacing: 2px;">
+                <br>
+                <button class="start-btn info-btn" style="background-color: #ffb300;" onclick="joinRoom()">הצטרף לחדר 🚪</button>
+                <div id="guest-room-status" style="margin-top: 15px; font-size: 1.2rem; font-weight: bold;"></div>
+            </div>
+
+            <div class="settings-group" id="team-selection-group">
+                <div class="settings-title">כמה משחקים/ות?</div>
+                <button class="option-btn player-option" onclick="selectPlayers(1)">1 (לבד)</button>
+                <button class="option-btn player-option" onclick="selectPlayers(2)">2 קבוצות</button>
+                <button class="option-btn player-option" onclick="selectPlayers(3)">3 קבוצות</button>
+                <button class="option-btn player-option selected" onclick="selectPlayers(4)">4 קבוצות</button>
+                <button class="option-btn player-option bot-btn" id="bot-mode-btn" onclick="selectPlayers('bot')">🤖 נגד המחשב</button>
+            </div>
+
+            <div class="settings-group" id="player-name-group" style="display: none; background: #e3f2fd;">
+                <div class="settings-title" style="color: #1565c0;">איך קוראים לכם? 👤</div>
+                <div id="player-inputs-container">
+                    <input type="text" id="player-name-input" placeholder="הקלד/י את השם כאן..." style="width: 80%; padding: 10px; border-radius: 10px; border: 2px solid #90caf9; font-size: 1.2rem; text-align: center; font-family: inherit; color: var(--primary);">
+                </div>
+            </div>
+
+            <div class="settings-group" id="bot-diff-group" style="display: none; background: #e8eaf6;">
+                <div class="settings-title" style="color: #3f51b5;">רמת החוכמה של הבוט 🤖<br><span style="font-size: 1rem; font-weight: normal; color: #5c6bc0;">(משפיע על הזיכרון והידע של הבוט, לא על השאלות)</span></div>
+                <button class="option-btn bot-diff-btn diff-easy" onclick="selectBotDiff('easy', 0.6, 0.2)">🟢 קל</button>
+                <button class="option-btn bot-diff-btn diff-medium selected" onclick="selectBotDiff('medium', 0.85, 0.5)">🟡 בינוני</button>
+                <button class="option-btn bot-diff-btn diff-hard" onclick="selectBotDiff('hard', 0.98, 0.85)">🔴 קשה</button>
+            </div>
+
+            <div class="settings-group" id="main-themes-group">
+                <div class="settings-title">נושא המשחק:</div>
+                <div id="themes-container"></div>
+            </div>
+
+            <div class="settings-group" id="sub-themes-group" style="display: none; background: #f3e5f5;">
+                <div class="settings-title" style="color: #8e24aa;">בחרו תת-נושא 🔍</div>
+                <div id="sub-themes-container"></div>
+            </div>
+
+            <div class="settings-group" id="pairs-group">
+                <div class="settings-title">כמות זוגות  (הקלפים במשחק):</div>
+                <button class="option-btn pair-option" onclick="selectPairs(5)">5</button>
+                <button class="option-btn pair-option" onclick="selectPairs(10)">10</button>
+                <button class="option-btn pair-option selected" onclick="selectPairs(20)">20</button>
+                <button class="option-btn pair-option" onclick="selectPairs(30)">30</button>
+                <button class="option-btn pair-option" onclick="selectPairs(40)">40</button>
+                <button class="option-btn pair-option" onclick="selectPairs(50)">50</button>
+            </div>
+
+            <button class="start-btn" id="main-start-btn" onclick="initGame(false)">בואו נתחיל!</button>
+
+            <div id="host-action-group" style="display: none; text-align: center; margin-top: 15px; width: 90%; max-width: 700px;">
+                <button class="start-btn" style="background-color: #f57c00; width: 100%;" onclick="createRoom()">צור חדר שחקנים 🏠</button>
+                <div id="host-room-status" style="margin-top: 15px; font-size: 1.2rem; font-weight: bold; background: white; padding: 20px; border-radius: 20px; border: 3px solid #f57c00; display: none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="instructions-modal">
+        <div class="modal-box" style="text-align: right; max-width: 600px;">
+            <h2 style="color: var(--card-bg); text-align: center;">איך משחקים? 🧠</h2>
+            <ul style="font-size: 1.2rem; line-height: 1.5;">
+                <li>המשחק מתנהל בתורות. בחרו 2 קלפים לפי האותיות והמספרים.</li>
+                <li>מצאתם זוג? תענו על שאלת טריוויה! יש נושאים עם 15 שניות ונושאים רציניים עם 30 שניות. עניתם נכון? תקבלו <b>נקודה</b>!</li>
+                <li>טעיתם? הזוג נסגר ותראה לכם התשובה הנכונה. <b>השאלה נשרפת!</b> בנושאים רציניים, השאלה תישאר על המסך עד שתלחצו על לחצן היציאה כדי שתוכלו ללמוד.</li>
+                <li><b>רצף:</b> 3 תשובות נכונות ברצף יתנו בונוס מיוחד!</li>
+                <li><b>גלגל הצלה:</b> קבוצה שטועה 5 פעמים ברצף, תקבל בשאלה הבאה זמן בלתי מוגבל (∞)!</li>
+            </ul>
+            <center><button class="start-btn info-btn" onclick="document.getElementById('instructions-modal').classList.remove('show')">הבנתי, תודה!</button></center>
+        </div>
+    </div>
+
+    <div id="game-container">
+        <div id="top-controls">
+            <button class="control-btn" onclick="requestGoBack()">🔙 חזור להגדרות (ויציאה)</button>
+            <button class="control-btn" id="mute-btn" onclick="toggleMute()">🔊 סאונד פועל</button>
+        </div>
+        
+        <div id="scoreboard"></div>
+        <div id="game-board"></div>
+    </div>
+
+    <div id="modal-overlay">
+        <div id="start-q-box" class="modal-box">
+            <div class="topic-badge" id="topic-badge-start">נושא: ידע כללי</div>
+            <h2 id="modal-title" style="font-size: 2.5rem; font-weight: 900; margin-top:0; color: var(--card-bg);">זוג תואם! מוכנים/ות לשאלה?</h2>
+            <h3 id="answering-player-name-start" style="color: #ff9800; text-align: center; border-bottom: 2px solid #ff9800; padding-bottom: 10px; margin-top: 0;"></h3>
+            <button id="btn-reveal" class="start-btn" onclick="revealQuestion()">הצג שאלה והפעל טיימר</button>
+        </div>
+        
+        <div id="question-content" class="hidden modal-box" style="background: rgba(255,255,255,0.95); max-width: 900px; padding:20px;">
+            <button id="close-q-btn" class="hidden" onclick="closeModalManual()">X</button>
+            <h3 id="answering-player-name-q" style="color: #ff9800; text-align: center; border-bottom: 2px solid #ff9800; padding-bottom: 10px; margin-top: 0;"></h3>
+            <div id="timer-container">15</div>
+            <div class="topic-badge" id="topic-badge-q">נושא: ידע כללי</div>
+            <div id="question-text">כאן תופיע השאלה</div>
+            <div id="answers-grid"></div>
+        </div>
+    </div>
+
+    <div id="feedback-success" class="feedback-anim">🎉 כל הכבוד! 🎉</div>
+    <div id="feedback-fail" class="feedback-anim">❌ טעות... ❌</div>
+    <div id="feedback-streak" class="feedback-anim">🔥 אש! 3 ברצף! 🔥</div>
+
+    <div id="end-screen">
+        <div id="podium-announcer">מעבדים תוצאות...</div>
+        <div id="podium"></div>
+        <div id="end-controls">
+            
+            <div id="feedback-section">
+                <h3>מה חשבתם על המשחק? נשמח לשמוע! 🤩</h3>
+                
+                <div class="star-rating" dir="ltr">
+                    <span class="star" onclick="setRating(1)">★</span>
+                    <span class="star" onclick="setRating(2)">★</span>
+                    <span class="star" onclick="setRating(3)">★</span>
+                    <span class="star" onclick="setRating(4)">★</span>
+                    <span class="star" onclick="setRating(5)">★</span>
+                </div>
+
+                <textarea id="feedback-input" rows="3" placeholder="ספרו לנו מה אהבתם, מה אפשר לשפר..."></textarea><br>
+                <button id="feedback-btn" onclick="sendFeedback()">שליחת משוב 🚀</button>
+            </div>
+
+            <br>
+            <button class="start-btn" onclick="resetToMainMenu()">משחק חדש</button>
+            <div class="credits">נכתב ע״י שלי, ערן ומעיין 👑</div>
+        </div>
+    </div>
+
+    <script>
+        window.qDB = window.qDB || {};
+
+        // --- מערכת פיירבייס ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyD-YOSA2nOwB_knR7bPLLkZ93teAsspU_0",
+            authDomain: "doubletriviaonline.firebaseapp.com",
+            projectId: "doubletriviaonline",
+            storageBucket: "doubletriviaonline.firebasestorage.app",
+            messagingSenderId: "481045312726",
+            appId: "1:481045312726:web:af9af75ff5d5d96534c577"
+        };
+        if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
+        const db = firebase.database();
+
+        // --- פונקציית גלילה מותאמת אישית לטלפון ---
+        function smoothScrollMobile(targetId) {
+            setTimeout(() => {
+                const target = document.getElementById(targetId);
+                const container = document.getElementById('start-screen');
+                if (target && container) {
+                    container.scrollTo({ top: target.offsetTop - 20, behavior: 'smooth' });
+                }
+            }, 150);
+        }
+
+        // --- מעקב ואנליטיקה ---
+        if (!localStorage.getItem('trivia_user_id')) {
+            localStorage.setItem('trivia_user_id', 'user_' + Math.random().toString(36).substr(2, 9));
+            localStorage.setItem('trivia_visit_count', 0);
+            localStorage.setItem('trivia_games_finished', 0);
+        }
+        let startTime = Date.now(); 
+
+        function logEventToSheets(eventType, themeName, timeSpent, rating, msg) {
+            let savedName = localStorage.getItem('trivia_player_name');
+            let baseId = localStorage.getItem('trivia_user_id');
+            let finalId = savedName ? `${savedName} (${baseId})` : baseId;
+
+            const googleSheetUrl = "https://script.google.com/macros/s/AKfycbwfV4K48iRLCJ7B25kmuMmMZbnBw4Z5w1KBizf9_3rd7kMmD3PBuFMkeXlHg6--xT0H/exec";
+            fetch(googleSheetUrl, {
+                method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    "תאריך ושעה": new Date().toLocaleString('he-IL'), "מזהה": finalId,
+                    "מספר כניסות": localStorage.getItem('trivia_visit_count'), "סוג אירוע": eventType,
+                    "נושא": themeName || "-", "זמן משחק (דקות)": timeSpent || "-",
+                    "דירוג": rating || "-", "הודעת משוב": msg || "-"
+                })
+            }).catch(e => console.log("Log failed"));
+        }
+
+        window.onload = () => {
+            let savedName = localStorage.getItem('trivia_player_name');
+            if (savedName) document.getElementById('player-name-input').value = savedName;
+
+            if (!sessionStorage.getItem('trivia_active_session')) {
+                let visits = parseInt(localStorage.getItem('trivia_visit_count')) + 1;
+                localStorage.setItem('trivia_visit_count', visits);
+                sessionStorage.setItem('trivia_active_session', 'true');
+                logEventToSheets("כניסה לאתר 🌐", "-", "-", "-", window.innerWidth < 768 ? "מכשיר: נייד" : "מכשיר: מחשב");
+            }
+
+            if (typeof gameConfig !== 'undefined') {
+                loadAllQuestionFiles();
+                buildThemeButtons();
+            } else { alert("שגיאה: קובץ ההגדרות לא נטען."); }
+
+            let savedDevice = sessionStorage.getItem('doubleTriviaDevice');
+            if (savedDevice) {
+                document.getElementById('device-selection-group').style.display = 'none';
+                document.getElementById('network-selection-group').style.display = 'block';
+                selectedDevice = savedDevice;
+            }
+
+            if (localStorage.getItem('savedTriviaGame')) {
+                document.getElementById('resume-btn').style.display = 'inline-block';
+            }
+        };
+
+        window.addEventListener("popstate", (e) => {
+            if (document.getElementById('game-container').style.display === 'flex') {
+                const confirmExit = confirm("בטוחים שאתם רוצים לצאת חזרה להגדרות?");
+                if (!confirmExit) { history.pushState(null, null, window.location.href); } 
+                else { goBackToSettings(); }
+            }
+        });
+
+        let selectedDevice = null, selectedTheme = 'gen', selectedPairs = 20, gameMode = 4;
+        let activeTeamId = 1, cards = [], flippedCards = [], activePair = [];
+        let timerInterval, timeLeft = 15, currentCols = 8, matchedPairsCount = 0;
+        let teams = [], currentQuestionObj = null, lockBoard = false;
+        let availableQuestions = [];
+        let botTriviaProb = 0.85, botMemoryProb = 0.5;  
+        let currentThemeIcons = [];
+        let manualClosePending = false; 
+
+        let isOnlineNetwork = false;
+        let myPlayerId = null;
+        let myTeamId = null;
+        let isHost = false;
+        let currentRoomId = null;
+
+        const fallbackIcons = ['🌍','🚀','💡','🎸','⏰','💎','🎲','🧩','🔬','🧬','🔭','💻','⚡','🪐','🧪','🔋','📡','🦠','🧲','🗽','🗼','🗻','🐫','🗺️','🏝️','⛩️','🏰','🗿','🏔️','🏜️','🌋','🎬','🎨','🎤','🎭','⚽','🍔','🏆','🎮','📸','🎧','🚗','🚲','⚓','🎈','🎯','🪄','🧸','📚','🔥'];
+
+        function buildThemeButtons() {
+            const container = document.getElementById('themes-container'); 
+            container.innerHTML = '';
+            gameConfig.categories.forEach((cat, index) => {
+                let btn = document.createElement('button');
+                btn.className = 'option-btn theme-option' + (index === 0 ? ' selected' : '');
+                btn.innerText = cat.title; 
+                btn.onclick = (e) => selectMainTheme(cat, e.target);
+                container.appendChild(btn); 
+                if (index === 0) selectMainTheme(cat, btn);
+            });
+        }
+
+        function loadAllQuestionFiles() {
+            gameConfig.categories.forEach(cat => {
+                if (cat.file) { let s = document.createElement('script'); s.src = cat.file; document.head.appendChild(s); }
+                if (cat.subCategories) { cat.subCategories.forEach(sub => { if (sub.file) { let s = document.createElement('script'); s.src = sub.file; document.head.appendChild(s); } }); }
+            });
+        }
+
+        function selectMainTheme(category, btnElement) { 
+            document.querySelectorAll('.theme-option').forEach(b => b.classList.remove('selected')); 
+            if(btnElement) btnElement.classList.add('selected'); 
+            currentThemeIcons = category.icons ? category.icons : fallbackIcons;
+
+            const subGroup = document.getElementById('sub-themes-group');
+            const subContainer = document.getElementById('sub-themes-container');
+            
+            if (category.subCategories && category.subCategories.length > 0) {
+                subGroup.style.display = 'block'; 
+                subContainer.innerHTML = '';
+                category.subCategories.forEach((sub, index) => {
+                    let btn = document.createElement('button');
+                    btn.className = 'option-btn sub-option' + (index === 0 ? ' selected' : '');
+                    btn.innerText = sub.title; 
+                    btn.onclick = (e) => selectSubTheme(sub, e.target);
+                    subContainer.appendChild(btn); 
+                    if(index === 0) selectSubTheme(sub, btn);
+                });
+            } else {
+                subGroup.style.display = 'none'; 
+                selectedTheme = category.id;
+            }
+            if(event && event.type === 'click') {
+                smoothScrollMobile(category.subCategories ? 'sub-themes-group' : 'pairs-group');
+            }
+        }
+
+        function selectSubTheme(sub, btnElement) { 
+            document.querySelectorAll('.sub-option').forEach(b => b.classList.remove('selected')); 
+            if(btnElement) btnElement.classList.add('selected'); 
+            selectedTheme = sub.id; 
+        }
+
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        let audioCtx; 
+        let isMuted = false;
+
+        function initAudio() { 
+            if(!audioCtx && !isMuted) audioCtx = new AudioContext(); 
+        }
+
+        function toggleMute() { 
+            isMuted = !isMuted; 
+            const btn = document.getElementById('mute-btn'); 
+            if(isMuted) { 
+                btn.innerText = "🔇 מושתק"; 
+                btn.classList.add('muted'); 
+            } else { 
+                btn.innerText = "🔊 סאונד פועל"; 
+                btn.classList.remove('muted'); 
+                initAudio(); 
+            } 
+        }
+
+        function playTone(freq, type, dur, start, vol=0.1) { 
+            if(isMuted || !audioCtx) return; 
+            try{ 
+                const osc = audioCtx.createOscillator(), gain = audioCtx.createGain(); 
+                osc.type = type; 
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime + start); 
+                osc.connect(gain); 
+                gain.connect(audioCtx.destination); 
+                gain.gain.setValueAtTime(vol, audioCtx.currentTime + start); 
+                gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + start + dur); 
+                osc.start(audioCtx.currentTime + start); 
+                osc.stop(audioCtx.currentTime + start + dur); 
+            } catch(e){} 
+        }
+
+        function playHappySound() { initAudio(); playTone(440,'sine',0.5,0,0.2); playTone(554,'sine',0.5,0.15,0.2); playTone(659,'sine',0.5,0.3,0.2); playTone(880,'sine',1.0,0.45,0.3); }
+        function playSadSound() { initAudio(); playTone(300,'sawtooth',1.0,0,0.2); playTone(250,'sawtooth',1.0,1.0,0.2); }
+        function playVictorySound() { initAudio(); [523,659,783,1046,783,1046].forEach((f,i)=>playTone(f,'square',0.5,i*0.2,0.1)); }
+
+        function requestGoBack() {
+            const confirmExit = confirm("בטוחים שאתם רוצים לצאת חזרה להגדרות? (באופליין המשחק יישמר, באונליין תצאו מהחדר)");
+            if (confirmExit) goBackToSettings();
+        }
+
+        function goBackToSettings() { 
+            if (isOnlineNetwork) {
+                location.reload(); 
+            } else {
+                clearInterval(timerInterval); 
+                document.getElementById('game-container').style.display = 'none'; 
+                document.getElementById('start-screen').style.display = 'flex';
+                if (localStorage.getItem('savedTriviaGame')) { 
+                    document.getElementById('resume-btn').style.display = 'inline-block'; 
+                }
+            }
+        }
+
+        function selectDevice(dev) { 
+            document.querySelectorAll('#dev-desktop, #dev-mobile').forEach(b=>b.classList.remove('selected')); 
+            document.getElementById('dev-'+dev).classList.add('selected'); 
+            selectedDevice = dev; 
+            sessionStorage.setItem('doubleTriviaDevice', dev); 
+            document.getElementById('network-selection-group').style.display = 'block'; 
+            document.getElementById('network-selection-group').style.animation = 'fadeInDown 0.6s ease forwards'; 
+            smoothScrollMobile('network-selection-group');
+        }
+
+        function chooseNetwork(mode) {
+            let adv = document.getElementById('advanced-settings');
+            adv.style.display = 'flex';
+            
+            if (mode === 'local') {
+                isOnlineNetwork = false;
+                document.getElementById('online-role-group').style.display = 'none';
+                document.getElementById('online-guest-lobby').style.display = 'none';
+                document.getElementById('host-action-group').style.display = 'none';
+                document.getElementById('team-selection-group').style.display = 'block';
+                document.getElementById('main-themes-group').style.display = 'block';
+                document.getElementById('pairs-group').style.display = 'block';
+                document.getElementById('main-start-btn').style.display = 'block';
+                selectPlayers(4); 
+            } else {
+                isOnlineNetwork = true;
+                document.getElementById('online-role-group').style.display = 'block';
+                document.getElementById('team-selection-group').style.display = 'none';
+                document.getElementById('player-name-group').style.display = 'none';
+                document.getElementById('main-themes-group').style.display = 'none';
+                document.getElementById('sub-themes-group').style.display = 'none';
+                document.getElementById('pairs-group').style.display = 'none';
+                document.getElementById('main-start-btn').style.display = 'none';
+                document.getElementById('host-action-group').style.display = 'none';
+            }
+            smoothScrollMobile('advanced-settings');
+        }
+
+        function selectOnlineRole(role) {
+            if(role === 'host') {
+                document.getElementById('online-guest-lobby').style.display = 'none';
+                document.getElementById('player-name-group').style.display = 'block';
+                document.getElementById('main-themes-group').style.display = 'block';
+                document.getElementById('pairs-group').style.display = 'block';
+                document.getElementById('host-action-group').style.display = 'block';
+                document.getElementById('player-name-input').placeholder = "שם המארח/ת...";
+            } else {
+                document.getElementById('online-guest-lobby').style.display = 'block';
+                document.getElementById('player-name-group').style.display = 'none';
+                document.getElementById('main-themes-group').style.display = 'none';
+                document.getElementById('sub-themes-group').style.display = 'none';
+                document.getElementById('pairs-group').style.display = 'none';
+                document.getElementById('host-action-group').style.display = 'none';
+            }
+            smoothScrollMobile(role === 'host' ? 'host-action-group' : 'online-guest-lobby');
+        }
+
+        function selectPairs(num) { 
+            document.querySelectorAll('.pair-option').forEach(btn => btn.classList.remove('selected')); 
+            if(event && event.target) event.target.classList.add('selected'); 
+            selectedPairs = num; 
+        }
+
+        function selectPlayers(mode) { 
+            document.querySelectorAll('.player-option').forEach(btn => btn.classList.remove('selected')); 
+            if(event && event.target) event.target.classList.add('selected'); 
+            gameMode = mode; 
+            document.getElementById('bot-diff-group').style.display = (mode === 'bot') ? 'block' : 'none'; 
+            document.getElementById('player-name-group').style.display = (mode === 1 || mode === 'bot') ? 'block' : 'none';
+            document.getElementById('player-name-input').placeholder = "הקלד/י את השם כאן...";
+            
+            if(event && event.type === 'click') {
+                smoothScrollMobile('main-themes-group');
+            }
+        }
+
+        function selectBotDiff(level, tProb, mProb) { 
+            document.querySelectorAll('.bot-diff-btn').forEach(btn => btn.classList.remove('selected')); 
+            if(event && event.target) event.target.classList.add('selected'); 
+            botTriviaProb = tProb; 
+            botMemoryProb = mProb; 
+        }
+
+        function prepareShuffledQuestionsData() {
+            let rawQs = window.qDB[selectedTheme] ? JSON.parse(JSON.stringify(window.qDB[selectedTheme].q)) : [];
+            shuffle(rawQs);
+            let safeQs = [];
+            rawQs.forEach(q => {
+                if(q && q.length > 0) {
+                    let validOptions = [];
+                    let originalOptions = [q[1], q[2], q[3], q[4]];
+                    for(let i=0; i<4; i++) {
+                        if(originalOptions[i] !== "") validOptions.push({ text: originalOptions[i], isCorrect: (i === q[5]) });
+                    }
+                    if (!(validOptions.length === 2 && (validOptions[0].text === "נכון" || validOptions[0].text === "לא נכון"))) {
+                        shuffle(validOptions);
+                    }
+                    safeQs.push({
+                        q: q[0],
+                        options: validOptions,
+                        timer: q.length > 6 ? q[6] : null
+                    });
+                }
+            });
+            return safeQs;
+        }
+
+        function sendOnlineEvent(type, payload) {
+            if (!isOnlineNetwork || !currentRoomId) return;
+            db.ref('rooms/' + currentRoomId + '/events').push({ 
+                sender: myPlayerId, 
+                type: type, 
+                payload: payload || {}, 
+                timestamp: firebase.database.ServerValue.TIMESTAMP 
+            });
+        }
+
+        function createRoom() {
+            let btn = document.querySelector('#host-action-group .start-btn'); 
+            if (btn.disabled) return;
+            btn.disabled = true; 
+            btn.innerText = "יוצר חדר...";
+
+            let pName = document.getElementById('player-name-input').value.trim() || "מארח/ת";
+            let roomId = Math.floor(1000 + Math.random() * 9000).toString(); 
+            currentRoomId = roomId; 
+            myPlayerId = "host"; 
+            isHost = true;
+
+            document.getElementById('host-room-status').style.display = 'block';
+            document.getElementById('host-room-status').innerHTML = `
+                <h3 style="color: #e65100; margin-bottom: 5px;">החדר נוצר!</h3>
+                <p>תגידו לכולם להזין את הקוד:</p>
+                <div style="font-size: 4rem; font-weight: 900; letter-spacing: 5px; color: #d32f2f;">${roomId}</div>
+                <div id="joined-players-list" style="margin: 15px 0; color: #1565c0; font-weight: bold; font-size:1.1rem;">שחקנים שהצטרפו: רק אתה בינתיים...</div>
+                <button id="host-start-game-btn" class="start-btn" style="background-color: #4caf50; font-size: 1.3rem; padding: 15px 30px;" onclick="generateAndUploadBoard('${roomId}')">התחל משחק לכולם! 🚀</button>`;
+
+            db.ref('rooms/' + roomId).set({ 
+                status: 'waiting', 
+                hostName: pName, 
+                theme: selectedTheme, 
+                pairs: selectedPairs, 
+                createdAt: Date.now(), 
+                players: {} 
+            }).then(() => {
+                btn.style.display = 'none'; 
+                db.ref('rooms/' + roomId + '/players').on('value', snap => {
+                    let playersData = snap.val();
+                    if(playersData) { 
+                        let names = Object.values(playersData).map(p => p.name).join(' | '); 
+                        document.getElementById('joined-players-list').innerText = "הצטרפו: " + names; 
+                    }
+                });
+            });
+        }
+
+        function joinRoom() {
+            let btn = document.querySelector('#online-guest-lobby .start-btn'); 
+            if (btn.disabled) return;
+            
+            let roomId = document.getElementById('room-code-input').value.trim(); 
+            if(!roomId) { alert("נא להזין קוד חדר!"); return; }
+            
+            btn.disabled = true; 
+            btn.innerText = "מתחבר... ⏳";
+            let pName = document.getElementById('guest-name-input').value.trim() || "אורח/ת";
+
+            db.ref('rooms/' + roomId).once('value').then((snapshot) => {
+                if(snapshot.exists() && snapshot.val().status === 'waiting') {
+                    currentRoomId = roomId; 
+                    myPlayerId = "u_" + Math.random().toString(36).substr(2, 9); 
+                    isHost = false;
+                    
+                    db.ref('rooms/' + roomId + '/players/' + myPlayerId).set({ name: pName }).then(() => {
+                        document.getElementById('guest-room-status').innerHTML = `<h3 style="color: #66bb6a;">התחברת בהצלחה! ממתין למארח שיתחיל...</h3>`;
+                        btn.style.display = 'none'; 
+                        db.ref('rooms/' + roomId + '/status').on('value', (snap) => {
+                            if(snap.val() === 'playing') { 
+                                db.ref('rooms/' + roomId + '/status').off(); 
+                                startOnlineGameLocally(); 
+                            }
+                        });
+                    });
+                } else { 
+                    alert("שגיאה: החדר לא קיים או שכבר התחיל!"); 
+                    btn.disabled = false; 
+                    btn.innerText = "הצטרף לחדר 🚪"; 
+                }
+            }).catch(err => { 
+                alert("שגיאת התחברות!"); 
+                btn.disabled = false; 
+                btn.innerText = "הצטרף לחדר 🚪"; 
+            });
+        }
+
+        function generateAndUploadBoard(roomId) {
+            let startBtn = document.getElementById('host-start-game-btn'); 
+            if (startBtn) { 
+                startBtn.disabled = true; 
+                startBtn.innerText = "מכין לוח... ⏳"; 
+            }
+            
+            try {
+                db.ref('rooms/' + roomId).once('value').then(snap => {
+                    let roomData = snap.val(); 
+                    let hostName = roomData.hostName || "מארח"; 
+                    let joinedPlayers = roomData.players || {};
+                    
+                    let generatedTeams = []; 
+                    generatedTeams.push({ id: 1, name: hostName, score: 0, streak: 0, maxStreak: 0, consecutiveFailures: 0, pairsFound: 0, correctAnswers: 0, wrongAnswers: 0 });
+
+                    let teamId = 2, updatedPlayers = {};
+                    for (let key in joinedPlayers) {
+                        generatedTeams.push({ id: teamId, name: joinedPlayers[key].name || "שחקן", score: 0, streak: 0, maxStreak: 0, consecutiveFailures: 0, pairsFound: 0, correctAnswers: 0, wrongAnswers: 0 });
+                        updatedPlayers[key] = { name: joinedPlayers[key].name, teamId: teamId }; 
+                        teamId++;
+                    }
+                    db.ref('rooms/' + roomId + '/players').set(updatedPlayers);
+
+                    let safeQs = prepareShuffledQuestionsData();
+
+                    let cols = 8;
+                    if(selectedPairs === 5 || selectedPairs === 10) cols = 5; 
+                    else if(selectedPairs === 30 || selectedPairs === 40 || selectedPairs === 50) cols = 10;
+                    if(window.innerWidth < 768) cols = 4;
+
+                    let combinedIcons = [...new Set([...currentThemeIcons, ...fallbackIcons])];
+                    const gameIcons = combinedIcons.slice(0, selectedPairs);
+                    let boardCards = []; 
+                    gameIcons.forEach(icon => { boardCards.push(icon); boardCards.push(icon); }); 
+                    shuffle(boardCards);
+
+                    db.ref('rooms/' + roomId).update({
+                        status: 'playing',
+                        gameState: { 
+                            theme: selectedTheme, 
+                            pairs: selectedPairs, 
+                            teams: generatedTeams, 
+                            cards: boardCards, 
+                            questions: safeQs, 
+                            cols: cols 
+                        }
+                    }).then(() => { startOnlineGameLocally(); }).catch(err => alert("תקלה: " + err));
+                });
+            } catch (e) { alert("שגיאה ביצירת הלוח: " + e.message); }
+        }
+
+        function startOnlineGameLocally() {
+            db.ref('rooms/' + currentRoomId + '/gameState').once('value').then((snap) => {
+                let gameState = snap.val(); 
+                if (!gameState) { alert("שגיאה בטעינת הלוח מהשרת."); return; }
+                
+                selectedTheme = gameState.theme || 'gen'; 
+                selectedPairs = gameState.pairs || 20;
+                teams = gameState.teams ? Object.values(gameState.teams) : [];
+                cards = gameState.cards ? Object.values(gameState.cards) : [];
+                availableQuestions = gameState.questions ? Object.values(gameState.questions) : [];
+                currentCols = gameState.cols || 8;
+
+                let teamIdPromise = isHost ? Promise.resolve((myTeamId = 1)) : db.ref('rooms/' + currentRoomId + '/players/' + myPlayerId).once('value').then(pSnap => { 
+                    if (pSnap.exists() && pSnap.val().teamId) myTeamId = pSnap.val().teamId; 
+                });
+
+                teamIdPromise.then(() => {
+                    db.ref('rooms/' + currentRoomId + '/events').on('child_added', eventSnap => {
+                        let event = eventSnap.val(); 
+                        if (!event || event.sender === myPlayerId) return; 
+                        
+                        if (event.type === 'FLIP_CARD') {
+                            let cardEl = document.querySelector(`.card[data-id='${event.payload.cardIndex}']`);
+                            if (cardEl) { 
+                                let originalLock = lockBoard; 
+                                lockBoard = false; 
+                                flipCard.call(cardEl, true); 
+                                lockBoard = originalLock; 
+                            }
+                        } else if (event.type === 'REVEAL_QUESTION') { 
+                            revealQuestion(true);
+                        } else if (event.type === 'CHECK_ANSWER') { 
+                            checkAnswer(event.payload.selectedIndex, true);
+                        } else if (event.type === 'FINISH_TURN') { 
+                            finishQuestionTurn(event.payload.isSuccess, true); 
+                        }
+                    });
+
+                    activeTeamId = 1; 
+                    matchedPairsCount = 0; 
+                    flippedCards = []; 
+                    activePair = []; 
+                    lockBoard = false;
+                    initAudio(); 
+                    
+                    document.getElementById('start-screen').style.display = 'none'; 
+                    document.getElementById('game-container').style.display = 'flex';
+                    if(window.innerWidth < 768) document.body.classList.add('mobile-mode');
+
+                    document.getElementById('game-board').style.gridTemplateColumns = `repeat(${currentCols}, 1fr)`;
+                    renderScoreboard(); 
+                    renderBoard(false); 
+                    startTime = Date.now();
+                });
+            });
+        }
+
+        function initGame(isResume = false) {
+            if(!selectedDevice) { alert("אנא בחרו מכשיר!"); return; }
+            if(!isResume && !window.qDB[selectedTheme]) { alert("שגיאה: קובץ השאלות לא נטען."); return; }
+            
+            initAudio(); 
+            document.getElementById('start-screen').style.display = 'none'; 
+            document.getElementById('game-container').style.display = 'flex';
+            if(selectedDevice === 'mobile') document.body.classList.add('mobile-mode');
+            history.pushState(null, null, window.location.href);
+
+            if (!isResume) {
+                teams = []; 
+                matchedPairsCount = 0; 
+                activeTeamId = 1; 
+                flippedCards = []; 
+                activePair = []; 
+                lockBoard = false;
+                
+                let pNameInput = document.getElementById('player-name-input').value.trim();
+                if (pNameInput) localStorage.setItem('trivia_player_name', pNameInput);
+                else if (gameMode !== 1 && gameMode !== 'bot') localStorage.removeItem('trivia_player_name');
+                
+                let savedName = localStorage.getItem('trivia_player_name') || "";
+                let numPlayers = (gameMode === 'bot') ? 2 : parseInt(gameMode);
+                
+                for(let i=1; i<=numPlayers; i++) {
+                    let tName = `קבוצה ${i}`;
+                    if (gameMode === 1 || gameMode === 'bot') {
+                        if (i === 1) tName = savedName ? savedName : "שחקן יחיד";
+                        if (gameMode === 'bot' && i === 2) tName = "בוט אונליין 🤖";
+                    }
+                    teams.push({ id: i, name: tName, score: 0, streak: 0, maxStreak: 0, consecutiveFailures: 0, pairsFound: 0, correctAnswers: 0, wrongAnswers: 0 });
+                }
+
+                availableQuestions = prepareShuffledQuestionsData();
+
+                if(selectedPairs === 5 || selectedPairs === 10) currentCols = 5; 
+                else if(selectedPairs === 30 || selectedPairs === 40 || selectedPairs === 50) currentCols = 10; 
+                else currentCols = 8;
+                
+                if(selectedDevice === 'mobile') currentCols = 4;
+                
+                let combinedIcons = [...new Set([...currentThemeIcons, ...fallbackIcons])];
+                const gameIcons = combinedIcons.slice(0, selectedPairs);
+                cards = []; 
+                gameIcons.forEach((icon) => { cards.push(icon); cards.push(icon); }); 
+                shuffle(cards); 
+
+                startTime = Date.now();
+                let themeName = window.qDB[selectedTheme] ? window.qDB[selectedTheme].title : selectedTheme;
+                logEventToSheets("התחיל משחק 🎮", themeName, "-", "-", `מצב: ${gameMode}, זוגות: ${selectedPairs}`);
+            }
+
+            document.getElementById('game-board').style.gridTemplateColumns = `repeat(${currentCols}, 1fr)`;
+            renderScoreboard(); 
+            renderBoard(isResume); 
+            if(!isResume) saveGameState(); 
+        }
+
+        function loadGameState() {
+            const saved = localStorage.getItem('savedTriviaGame'); 
+            if (!saved) return;
+            const state = JSON.parse(saved);
+            
+            selectedTheme = state.selectedTheme; 
+            selectedPairs = state.selectedPairs; 
+            gameMode = state.gameMode;
+            teams = state.teams; 
+            activeTeamId = state.activeTeamId; 
+            matchedPairsCount = state.matchedPairsCount;
+            cards = state.cards; 
+            currentCols = state.currentCols; 
+            currentThemeIcons = state.currentThemeIcons;
+            availableQuestions = state.availableQuestions;
+            botTriviaProb = state.botTriviaProb !== undefined ? state.botTriviaProb : 0.85; 
+            botMemoryProb = state.botMemoryProb !== undefined ? state.botMemoryProb : 0.5;
+
+            initGame(true);
+            document.querySelectorAll('.card').forEach((c, idx) => { 
+                if (state.solvedIndices.includes(idx)) { c.classList.add('flipped', 'solved'); } 
+            });
+        }
+
+        function saveGameState() {
+            if (isOnlineNetwork || matchedPairsCount >= selectedPairs) return; 
+            let solvedIndices = []; 
+            document.querySelectorAll('.card').forEach((c, idx) => { 
+                if (c.classList.contains('solved')) solvedIndices.push(idx); 
+            });
+            const state = { 
+                selectedTheme, selectedPairs, gameMode, teams, activeTeamId, 
+                matchedPairsCount, cards, solvedIndices, currentCols, currentThemeIcons, 
+                availableQuestions, botTriviaProb, botMemoryProb 
+            };
+            localStorage.setItem('savedTriviaGame', JSON.stringify(state));
+        }
+
+        function shuffle(array) { 
+            for (let i = array.length - 1; i > 0; i--) { 
+                const j = Math.floor(Math.random() * (i + 1)); 
+                [array[i], array[j]] = [array[j], array[i]]; 
+            } 
+        }
+
+        // לוח התוצאות מראה אך ורק את מי שמשחק
+        function renderScoreboard() {
+            const sb = document.getElementById('scoreboard'); 
+            sb.innerHTML = '';
+            teams.forEach((t) => {
+                if (t.id === activeTeamId) {
+                    let div = document.createElement('div');
+                    div.className = `team-score active`; 
+                    div.id = `team-${t.id}`;
+                    div.innerHTML = `🎯 תור עכשיו 🎯<br><span id="score-${t.id}">${t.name}</span>
+                                     <div style="font-size: 1.2rem; color: #4a4a4a; font-weight: bold;">נקודות: ${t.score}</div>
+                                     <div class="streak-icon" id="streak-${t.id}" style="display:${t.streak >= 3 ? 'block' : 'none'}">🔥 רצף: ${t.streak}</div>
+                                     <div class="mercy-icon" id="mercy-${t.id}" style="display:${(t.consecutiveFailures > 0 && t.name !== "בוט אונליין 🤖") ? 'block' : 'none'}">${t.consecutiveFailures >= 5 ? 'זמן אינסופי!' : 'טעות ' + t.consecutiveFailures + '/5'}</div>`;
+                    if(t.consecutiveFailures >= 5 && t.name !== "בוט אונליין 🤖") div.querySelector('.mercy-icon').style.color = "var(--active-team)";
+                    sb.appendChild(div);
+                }
+            });
+        }
+
+        function renderBoard(isResume) {
+            const board = document.getElementById('game-board'); 
+            board.innerHTML = '';
+            cards.forEach((icon, index) => {
+                const rowNum = Math.floor(index / currentCols) + 1;
+                const colLetter = String.fromCharCode(65 + (index % currentCols));
+                const card = document.createElement('div'); 
+                card.classList.add('card'); 
+                card.dataset.icon = icon; 
+                card.dataset.id = index;
+                card.innerHTML = `<div class="card-face card-front"><div class="coord-label" dir="ltr">${colLetter}${rowNum}</div></div><div class="card-face card-back">${icon}</div>`;
+                card.addEventListener('click', () => { if(!lockBoard) flipCard.call(card); });
+                board.appendChild(card);
+            });
+        }
+
+        function flipCard(fromNetwork = false) {
+            if (isOnlineNetwork && !fromNetwork && activeTeamId !== myTeamId) {
+                let activeTeamEl = document.getElementById(`team-${activeTeamId}`);
+                if (activeTeamEl) { 
+                    activeTeamEl.style.transform = "scale(1.1)"; 
+                    setTimeout(() => activeTeamEl.style.transform = "scale(1.05)", 200); 
+                }
+                return;
+            }
+
+            if (flippedCards.length < 2 && !this.classList.contains('flipped') && !this.classList.contains('solved')) {
+                this.classList.add('flipped'); 
+                flippedCards.push(this);
+                if (isOnlineNetwork && !fromNetwork) sendOnlineEvent('FLIP_CARD', { cardIndex: this.dataset.id });
+                if (flippedCards.length === 2) setTimeout(checkMatch, 600);
+            }
+        }
+
+        function checkMatch() {
+            const [c1, c2] = flippedCards;
+            if (c1.dataset.icon === c2.dataset.icon) {
+                teams[activeTeamId - 1].pairsFound++; 
+                activePair = [c1, c2]; 
+                openTriviaModal();
+            } else {
+                c1.classList.remove('flipped'); 
+                c2.classList.remove('flipped');
+                flippedCards = []; 
+                resetStreakAndNextTeam(); 
+            }
+        }
+
+        function resetStreakAndNextTeam() {
+            let tIndex = activeTeamId - 1; 
+            teams[tIndex].streak = 0; 
+            
+            activeTeamId = (activeTeamId % teams.length) + 1;
+            renderScoreboard(); 
+            
+            saveGameState(); 
+            if(gameMode === 'bot' && activeTeamId === 2) { 
+                lockBoard = true; 
+                setTimeout(botPlay, 1000); 
+            } else { 
+                lockBoard = false; 
+            }
+        }
+
+        let isInfiniteTime = false;
+
+        function checkIfSerious() {
+            const t = window.qDB[selectedTheme] ? window.qDB[selectedTheme].title : "";
+            return /פיזיקה|מתמטיקה|אזרחות|היסטוריה|מדעי המחשב|java|python|javascript|c#/i.test(t) || /פיזיקה|מתמטיקה|אזרחות|היסטוריה|מדעי המחשב|java|python|javascript|c#/i.test(selectedTheme);
+        }
+
+        function openTriviaModal() {
+            document.getElementById('close-q-btn').classList.add('hidden'); 
+            manualClosePending = false;
+            
+            const modal = document.getElementById('modal-overlay');
+            document.getElementById('start-q-box').classList.remove('hidden'); 
+            document.getElementById('question-content').classList.add('hidden');
+            
+            const themeTitle = window.qDB[selectedTheme] ? window.qDB[selectedTheme].title : "ידע כללי";
+            document.getElementById('topic-badge-start').innerText = `נושא: ${themeTitle}`; 
+            document.getElementById('topic-badge-q').innerText = `נושא: ${themeTitle}`;
+
+            let activeTeam = teams.find(t => t.id === activeTeamId);
+            let activeName = activeTeam ? activeTeam.name : "שחקן";
+            document.getElementById('answering-player-name-start').innerText = `🔥 עכשיו עונה: ${activeName} 🔥`;
+            document.getElementById('answering-player-name-q').innerText = `🔥 עכשיו עונה: ${activeName} 🔥`;
+
+            if (availableQuestions.length === 0) availableQuestions = prepareShuffledQuestionsData();
+            currentQuestionObj = availableQuestions.pop();
+
+            const grid = document.getElementById('answers-grid'); 
+            grid.innerHTML = ''; 
+            currentQuestionObj.options.forEach((opt, index) => {
+                let btn = document.createElement('button');
+                btn.className = `mcq-btn opt-color-${index}`; 
+                btn.id = `btn-ans-${index}`;
+                btn.innerText = (opt.text === "נכון" || opt.text === "לא נכון") ? opt.text : "אבגד"[index] + ". " + opt.text;
+                btn.onclick = () => checkAnswer(index);
+                
+                if (isOnlineNetwork && activeTeamId !== myTeamId) btn.style.pointerEvents = 'none'; 
+                
+                grid.appendChild(btn);
+            });
+            
+            document.getElementById('question-text').innerText = currentQuestionObj.q;
+            modal.classList.add('show');
+
+            if(gameMode === 'bot' && activeTeamId === 2) {
+                document.getElementById('btn-reveal').style.display = 'none';
+                document.getElementById('modal-title').innerText = "הבוט מצא זוג!";
+                setTimeout(() => { revealQuestion(); setTimeout(botAnswerTrivia, 3000); }, 2000);
+            } else { 
+                let br = document.getElementById('btn-reveal');
+                if (isOnlineNetwork && activeTeamId !== myTeamId) {
+                    br.style.display = 'none'; 
+                    document.getElementById('modal-title').innerText = `זוג תואם! ${activeName} פותחים את השאלה...`;
+                } else {
+                    br.style.display = 'inline-block'; 
+                    document.getElementById('modal-title').innerText = "זוג תואם! מוכנים/ות לשאלה?";
+                }
+            }
+        }
+
+        function revealQuestion(fromNetwork = false) {
+            if (isOnlineNetwork && !fromNetwork && activeTeamId !== myTeamId) return;
+            if (isOnlineNetwork && !fromNetwork) sendOnlineEvent('REVEAL_QUESTION', {});
+
+            document.getElementById('start-q-box').classList.add('hidden'); 
+            document.getElementById('question-content').classList.remove('hidden');
+            
+            let currentT = teams[activeTeamId - 1]; 
+            let timerEl = document.getElementById('timer-container');
+
+            if (currentT.consecutiveFailures >= 5 && currentT.name !== "בוט אונליין 🤖") {
+                isInfiniteTime = true; 
+                timerEl.innerText = "∞"; 
+                timerEl.style.fontSize = "4rem"; 
+                timerEl.style.borderColor = "var(--active-team)"; 
+                timerEl.style.color = "var(--active-team)";
+            } else {
+                isInfiniteTime = false; 
+                timeLeft = currentQuestionObj.timer ? currentQuestionObj.timer : (checkIfSerious() ? 30 : 15); 
+                timerEl.innerText = timeLeft; 
+                timerEl.style.fontSize = "3rem"; 
+                timerEl.style.borderColor = "white"; 
+                timerEl.style.color = "white";
+                
+                timerInterval = setInterval(() => {
+                    timeLeft--; 
+                    timerEl.innerText = timeLeft;
+                    if(timeLeft <= 5) { 
+                        timerEl.style.borderColor = "#ef5350"; 
+                        timerEl.style.color = "#ef5350"; 
+                    }
+                    if (timeLeft <= 0) { 
+                        clearInterval(timerInterval); 
+                        handleTimeOut(); 
+                    }
+                }, 1000);
+            }
+        }
+
+        function checkAnswer(selectedIndex, fromNetwork = false) {
+            if (isOnlineNetwork && !fromNetwork && activeTeamId !== myTeamId) return;
+            if(!isInfiniteTime && timeLeft <= 0) return; 
+            if(!isInfiniteTime) clearInterval(timerInterval); 
+            lockButtons();
+
+            if (isOnlineNetwork && !fromNetwork) sendOnlineEvent('CHECK_ANSWER', { selectedIndex: selectedIndex });
+
+            let currentT = teams[activeTeamId - 1];
+            let correctIndex = currentQuestionObj.options.findIndex(opt => opt.isCorrect);
+
+            if (currentQuestionObj.options[selectedIndex].isCorrect) { 
+                currentT.consecutiveFailures = 0; 
+                document.getElementById(`btn-ans-${selectedIndex}`).classList.add('correct-ans'); 
+                successQuestion(); 
+            } else { 
+                currentT.consecutiveFailures++; 
+                document.getElementById(`btn-ans-${selectedIndex}`).classList.add('selected-wrong'); 
+                document.getElementById(`btn-ans-${correctIndex}`).classList.add('correct-ans'); 
+                failQuestion(); 
+            }
+        }
+
+        function handleTimeOut() { 
+            if(isInfiniteTime) return; 
+            lockButtons(); 
+            teams[activeTeamId - 1].consecutiveFailures++; 
+            let correctIndex = currentQuestionObj.options.findIndex(opt => opt.isCorrect);
+            document.getElementById(`btn-ans-${correctIndex}`).classList.add('correct-ans');
+            failQuestion(); 
+        }
+
+        function lockButtons() { 
+            currentQuestionObj.options.forEach((_, i) => { 
+                let b = document.getElementById(`btn-ans-${i}`); 
+                if(b) { b.disabled = true; b.classList.add('wrong-ans'); } 
+            }); 
+        }
+
+        function showAnim(type, textOverride) { 
+            const el = document.getElementById(`feedback-${type}`); 
+            if(!el) return;
+            if(textOverride) el.innerText = textOverride;
+            el.className = 'feedback-anim'; 
+            void el.offsetWidth; 
+            el.classList.add(`anim-${type}`);
+        }
+
+        function successQuestion() {
+            if (!isOnlineNetwork || activeTeamId === myTeamId) {
+                playHappySound(); 
+                showAnim('success');
+            }
+            
+            let t = teams[activeTeamId-1]; 
+            t.score++; t.streak++; t.correctAnswers++; 
+            if(t.streak > t.maxStreak) t.maxStreak = t.streak;
+            
+            renderScoreboard(); 
+            
+            if(t.streak >= 3) { 
+                if (!isOnlineNetwork || activeTeamId === myTeamId) {
+                    setTimeout(() => { showAnim('streak', `🔥 אש! ${t.streak} ברצף! 🔥`); }, 1500); 
+                }
+            }
+            
+            if(activePair[0]) activePair[0].classList.add('solved'); 
+            if(activePair[1]) activePair[1].classList.add('solved'); 
+            matchedPairsCount++;
+            saveGameState(); 
+            
+            if (!isOnlineNetwork || activeTeamId === myTeamId) { 
+                setTimeout(() => { finishQuestionTurn(true); }, 3000); 
+            }
+        }
+
+        function failQuestion() {
+            if (!isOnlineNetwork || activeTeamId === myTeamId) {
+                playSadSound(); 
+                showAnim('fail'); 
+            }
+            
+            teams[activeTeamId-1].wrongAnswers = (teams[activeTeamId-1].wrongAnswers || 0) + 1; 
+            
+            renderScoreboard();
+            
+            if (!isOnlineNetwork || activeTeamId === myTeamId) {
+                if (checkIfSerious() && !(gameMode === 'bot' && activeTeamId === 2)) {
+                    document.getElementById('close-q-btn').classList.remove('hidden'); 
+                    manualClosePending = true;
+                } else { 
+                    setTimeout(() => { if(!manualClosePending) finishQuestionTurn(false); }, 4000); 
+                }
+            }
+        }
+
+        function closeModalManual(fromNetwork = false) {
+            if (isOnlineNetwork && !fromNetwork && activeTeamId !== myTeamId) return;
+            document.getElementById('close-q-btn').classList.add('hidden'); 
+            manualClosePending = false; 
+            finishQuestionTurn(false);
+        }
+
+        function finishQuestionTurn(isSuccess, fromNetwork = false) {
+            if (isOnlineNetwork && !fromNetwork && activeTeamId === myTeamId) {
+                sendOnlineEvent('FINISH_TURN', { isSuccess: isSuccess });
+            }
+
+            document.getElementById('modal-overlay').classList.remove('show'); 
+            document.getElementById('start-q-box').classList.add('hidden'); 
+            document.getElementById('question-content').classList.add('hidden');
+            document.getElementById('close-q-btn').classList.add('hidden'); 
+            clearInterval(timerInterval); 
+
+            if(!isSuccess) {
+                if(activePair[0]) activePair[0].classList.remove('flipped'); 
+                if(activePair[1]) activePair[1].classList.remove('flipped'); 
+                flippedCards = []; 
+                activePair = []; 
+                resetStreakAndNextTeam();
+            } else { 
+                flippedCards = []; 
+                activePair = []; 
+                checkEndGame(); 
+            }
+        }
+
+        function checkEndGame() { 
+            if(matchedPairsCount >= selectedPairs) {
+                setTimeout(showEndScreen, 1500); 
+            } else if(gameMode === 'bot' && activeTeamId === 2) { 
+                lockBoard = true; 
+                setTimeout(botPlay, 1000); 
+            } 
+        }
+
+        function botPlay() {
+            let available = Array.from(document.querySelectorAll('.card:not(.solved):not(.flipped)')); 
+            if(available.length < 2) return;
+            
+            let c1, c2;
+            if (Math.random() < botMemoryProb) {
+                let iconMap = {}; 
+                available.forEach(c => { 
+                    let icon = c.dataset.icon; 
+                    if(!iconMap[icon]) iconMap[icon] = []; 
+                    iconMap[icon].push(c); 
+                });
+                let pairedIcons = Object.values(iconMap).filter(arr => arr.length === 2);
+                if (pairedIcons.length > 0) { 
+                    let chosenPair = pairedIcons[Math.floor(Math.random() * pairedIcons.length)]; 
+                    c1 = chosenPair[0]; 
+                    c2 = chosenPair[1]; 
+                }
+            }
+            
+            if (!c1 || !c2) { 
+                c1 = available[Math.floor(Math.random() * available.length)]; 
+                let remaining = available.filter(c => c !== c1); 
+                c2 = remaining[Math.floor(Math.random() * remaining.length)]; 
+            }
+            
+            flipCard.call(c1); 
+            setTimeout(() => { flipCard.call(c2); }, 800);
+        }
+
+        function botAnswerTrivia() {
+            if(timeLeft <= 0) return;
+            let isCorrect = Math.random() < botTriviaProb; 
+            let correctIndex = currentQuestionObj.options.findIndex(opt => opt.isCorrect);
+            let chosen = isCorrect ? correctIndex : currentQuestionObj.options.map((o, i) => i).filter(i => i !== correctIndex)[Math.floor(Math.random() * 3)];
+            checkAnswer(chosen);
+        }
+
+        function fireConfetti() {
+            const colors = ['#ffca28', '#ab47bc', '#29b6f6', '#66bb6a', '#ec407a'];
+            for (let i = 0; i < 150; i++) {
+                let conf = document.createElement('div'); 
+                conf.className = 'confetti'; 
+                conf.style.left = Math.random() * 100 + 'vw'; 
+                conf.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)]; 
+                conf.style.top = '-10px'; 
+                document.getElementById('end-screen').appendChild(conf);
+                
+                let speed = Math.random() * 3 + 2, angle = Math.random() * 360;
+                let fall = setInterval(() => { 
+                    let currentTop = parseFloat(conf.style.top); 
+                    if (currentTop > window.innerHeight) { clearInterval(fall); conf.remove(); } 
+                    conf.style.top = currentTop + speed + 'px'; 
+                    conf.style.transform = `rotate(${angle}deg)`; 
+                    angle += 5; 
+                }, 20);
+            }
+        }
+
+        let currentRating = 0;
+        function setRating(val) { 
+            currentRating = val; 
+            document.querySelectorAll('.star').forEach((star, index) => { 
+                if (index < val) star.classList.add('active'); 
+                else star.classList.remove('active'); 
+            }); 
+        }
+
+        function sendFeedback() {
+            const msg = document.getElementById('feedback-input').value;
+            const btn = document.getElementById('feedback-btn');
+            
+            if(!msg && currentRating === 0) { 
+                alert("אנא סמנו דירוג כוכבים או כתבו לנו משהו לפני השליחה 😊"); 
+                return; 
+            }
+            
+            btn.disabled = true; 
+            btn.innerText = "שולח... ⏳";
+            
+            let timeSpent = Math.round((Date.now() - startTime) / 1000 / 60);
+            let themeName = window.qDB[selectedTheme] ? window.qDB[selectedTheme].title : selectedTheme;
+            logEventToSheets("משוב שחקן 💬", themeName, timeSpent, currentRating > 0 ? currentRating + "/5" : "-", msg);
+            
+            setTimeout(() => { 
+                document.getElementById('feedback-section').innerHTML = "<h3 style='color:#69f0ae;'>תודה רבה! המשוב נשמר בהצלחה 💖</h3>"; 
+            }, 1500);
+        }
+
+        function showEndScreen() {
+            localStorage.removeItem('savedTriviaGame'); 
+            let finished = parseInt(localStorage.getItem('trivia_games_finished') || 0) + 1; 
+            localStorage.setItem('trivia_games_finished', finished);
+            
+            document.getElementById('end-screen').classList.add('show');
+            
+            let timeSpent = Math.round((Date.now() - startTime) / 1000 / 60);
+            let themeName = window.qDB[selectedTheme] ? window.qDB[selectedTheme].title : selectedTheme;
+            logEventToSheets("סיים משחק 🏆", themeName, timeSpent, "-", `סיים בסך הכל ${finished} משחקים אי פעם`);
+
+            let sortedTeams = [...teams].sort((a,b) => b.score - a.score); 
+            sortedTeams[0].rank = 0; 
+            
+            for(let i=1; i<sortedTeams.length; i++) { 
+                if(sortedTeams[i].score === sortedTeams[i-1].score) {
+                    sortedTeams[i].rank = sortedTeams[i-1].rank; 
+                } else {
+                    sortedTeams[i].rank = i; 
+                }
+            }
+            
+            let podiumHTML = '';
+            let placesStyles = ['p0', 'p1', 'p2', 'p3'];
+            let displayOrder = [];
+            
+            if(teams.length === 1) displayOrder.push(sortedTeams[0]); 
+            else if(teams.length === 2) displayOrder.push(sortedTeams[1], sortedTeams[0]); 
+            else if(teams.length === 3) displayOrder.push(sortedTeams[1], sortedTeams[0], sortedTeams[2]); 
+            else displayOrder.push(sortedTeams[1], sortedTeams[0], sortedTeams[2], sortedTeams[3]);
+
+            displayOrder.forEach(t => {
+                let styleRank = t.rank > 3 ? 3 : t.rank;
+                let wrongs = t.wrongAnswers || 0;
+                podiumHTML += `<div class="podium-place ${placesStyles[styleRank]}" id="podium-rank-${t.id}">
+                                <div class="team-stats-podium">💡 זוגות: ${t.pairsFound}<br>✅ נכון: ${t.correctAnswers} | ❌ טעות: ${wrongs}</div>
+                                <div class="team-name-podium">${t.name}</div>
+                                <span>${t.score} נק'</span>
+                               </div>`;
+            });
+            
+            document.getElementById('podium').innerHTML = podiumHTML; 
+            document.getElementById('podium').style.display = 'flex'; 
+            document.getElementById('podium-announcer').style.display = 'block';
+
+            let revealSequence = [];
+            for (let i = sortedTeams.length - 1; i >= 0; i--) {
+                let text = "";
+                if(sortedTeams[i].rank === 0) text = `ובמקום הראשון... ${sortedTeams[i].name}!!! 🏆`; 
+                else if(sortedTeams[i].rank === 1) text = `במקום השני... ${sortedTeams[i].name}!`; 
+                else if(sortedTeams[i].rank === 2) text = `במקום השלישי... ${sortedTeams[i].name}!`; 
+                else text = `במקום הרביעי... ${sortedTeams[i].name}!`;
+                
+                revealSequence.push({ id: sortedTeams[i].id, text: text, isFirst: sortedTeams[i].rank === 0 });
+            }
+
+            let announcer = document.getElementById('podium-announcer');
+            let delay = 1000;
+            
+            revealSequence.forEach((step, index) => {
+                setTimeout(() => {
+                    announcer.innerText = step.text; 
+                    announcer.classList.add('pop-anim'); 
+
+                    if (window.innerWidth <= 600) {
+                        document.querySelectorAll('.podium-place').forEach(p => {
+                            p.style.display = 'none';
+                            p.classList.remove('revealed');
+                        });
+                    }
+                    
+                    let currPlace = document.getElementById(`podium-rank-${step.id}`);
+                    if (currPlace) {
+                        currPlace.style.display = 'flex';
+                        setTimeout(() => currPlace.classList.add('revealed'), 50);
+                    }
+                    
+                    if (step.isFirst) {
+                        playVictorySound(); 
+                        fireConfetti();
+                        setTimeout(() => {
+                            if (window.innerWidth > 600) {
+                                document.getElementById('podium').style.display = 'none';
+                                document.getElementById('podium-announcer').style.display = 'none';
+                            }
+                            document.getElementById('end-controls').style.display = 'block';
+                            document.getElementById('feedback-section').style.display = 'block';
+                        }, 4500); 
+                    } else { 
+                        playTone(400 + (index*100), 'sine', 0.4, 0, 0.2); 
+                    }
+                    setTimeout(() => announcer.classList.remove('pop-anim'), 800);
+                }, delay);
+                delay += 2500; 
+            });
+        }
+
+        function resetToMainMenu() {
+            location.reload(); 
+        }
+    </script>
+</body>
+</html>
