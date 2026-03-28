@@ -53,11 +53,17 @@ window.onload = () => {
         buildThemeButtons();
     } else { alert("שגיאה: קובץ ההגדרות לא נטען."); }
 
-    let savedDevice = sessionStorage.getItem('doubleTriviaDevice');
-    if (savedDevice) {
-        document.getElementById('device-selection-group').style.display = 'none';
-        document.getElementById('network-selection-group').style.display = 'block';
-        selectedDevice = savedDevice;
+    // זיהוי אוטומטי של סוג המכשיר לפי רוחב המסך
+    selectedDevice = window.innerWidth <= 768 ? 'mobile' : 'desktop';
+    
+    // העלמת אזור בחירת המכשיר (אם הוא קיים) והצגת בחירת הרשת
+    const deviceGroup = document.getElementById('device-selection-group');
+    if(deviceGroup) deviceGroup.style.display = 'none';
+    
+    const networkGroup = document.getElementById('network-selection-group');
+    if(networkGroup) {
+        networkGroup.style.display = 'block';
+        networkGroup.style.animation = 'fadeInDown 0.6s ease forwards';
     }
 
     if (localStorage.getItem('savedTriviaGame')) {
@@ -189,10 +195,8 @@ function requestGoBack() {
     if (confirmExit) goBackToSettings();
 }
 
-// יציאה נכונה שמתנתקת מהרשת
 function goBackToSettings() { 
     if (isOnlineNetwork) {
-        // רענון מלא מנקה את החיבורים לפיירבייס בצורה הכי בטוחה
         location.reload(); 
     } else {
         clearInterval(timerInterval); 
@@ -204,18 +208,8 @@ function goBackToSettings() {
     }
 }
 
-function selectDevice(dev) { 
-    document.querySelectorAll('#dev-desktop, #dev-mobile').forEach(b=>b.classList.remove('selected')); 
-    document.getElementById('dev-'+dev).classList.add('selected'); 
-    selectedDevice = dev; 
-    sessionStorage.setItem('doubleTriviaDevice', dev); 
-    document.getElementById('network-selection-group').style.display = 'block'; 
-    document.getElementById('network-selection-group').style.animation = 'fadeInDown 0.6s ease forwards'; 
-}
 function chooseNetwork(mode) {
     let adv = document.getElementById('advanced-settings');
-    
-    // פותחים את ההגדרות למטה, אבל כבר לא מעלימים את בחירת הרשת!
     adv.style.display = 'flex';
     
     if (mode === 'local') {
@@ -503,7 +497,6 @@ function startOnlineGameLocally() {
     });
 }
 
-// --- התחלת משחק אופליין ---
 function initGame(isResume = false) {
     if(!selectedDevice) { alert("אנא בחרו מכשיר!"); return; }
     if(!isResume && !window.qDB[selectedTheme]) { alert("שגיאה: קובץ השאלות לא נטען."); return; }
@@ -834,7 +827,6 @@ function showAnim(type, textOverride) {
 }
 
 function successQuestion() {
-    // הפעלת סאונד ואנימציה רק לשחקן ששיחק עכשיו
     if (!isOnlineNetwork || activeTeamId === myTeamId) {
         playHappySound(); 
         showAnim('success');
@@ -844,7 +836,6 @@ function successQuestion() {
     t.score++; t.streak++; t.correctAnswers++; 
     if(t.streak > t.maxStreak) t.maxStreak = t.streak;
     
-    // מעדכנים ניקוד אצל כולם
     renderScoreboard(); 
     
     if(t.streak >= 3) { 
@@ -864,7 +855,6 @@ function successQuestion() {
 }
 
 function failQuestion() {
-    // הפעלת סאונד ואנימציה רק לשחקן ששיחק עכשיו
     if (!isOnlineNetwork || activeTeamId === myTeamId) {
         playSadSound(); 
         showAnim('fail'); 
@@ -872,7 +862,6 @@ function failQuestion() {
     
     teams[activeTeamId-1].wrongAnswers = (teams[activeTeamId-1].wrongAnswers || 0) + 1; 
     
-    // מעדכנים ניקוד אצל כולם
     renderScoreboard();
     
     if (!isOnlineNetwork || activeTeamId === myTeamId) {
@@ -1026,26 +1015,25 @@ function showEndScreen() {
     logEventToSheets("סיים משחק 🏆", themeName, timeSpent, "-", `סיים בסך הכל ${finished} משחקים אי פעם`);
 
     let sortedTeams = [...teams].sort((a,b) => b.score - a.score); 
-    sortedTeams[0].rank = 0; 
+    let currentRank = 0;
     
-    for(let i=1; i<sortedTeams.length; i++) { 
-        if(sortedTeams[i].score === sortedTeams[i-1].score) {
-            sortedTeams[i].rank = sortedTeams[i-1].rank; 
-        } else {
-            sortedTeams[i].rank = i; 
+    for(let i=0; i<sortedTeams.length; i++) { 
+        if(i > 0 && sortedTeams[i].score < sortedTeams[i-1].score) {
+            currentRank++;
         }
+        sortedTeams[i].rank = currentRank; 
     }
     
+    let groupedRanks = {};
+    sortedTeams.forEach(t => {
+        if(!groupedRanks[t.rank]) groupedRanks[t.rank] = [];
+        groupedRanks[t.rank].push(t);
+    });
+
     let podiumHTML = '';
     let placesStyles = ['p0', 'p1', 'p2', 'p3'];
-    let displayOrder = [];
     
-    if(teams.length === 1) displayOrder.push(sortedTeams[0]); 
-    else if(teams.length === 2) displayOrder.push(sortedTeams[1], sortedTeams[0]); 
-    else if(teams.length === 3) displayOrder.push(sortedTeams[1], sortedTeams[0], sortedTeams[2]); 
-    else displayOrder.push(sortedTeams[1], sortedTeams[0], sortedTeams[2], sortedTeams[3]);
-
-    displayOrder.forEach(t => {
+    sortedTeams.forEach(t => {
         let styleRank = t.rank > 3 ? 3 : t.rank;
         let wrongs = t.wrongAnswers || 0;
         podiumHTML += `<div class="podium-place ${placesStyles[styleRank]}" id="podium-rank-${t.id}">
@@ -1057,18 +1045,33 @@ function showEndScreen() {
     
     document.getElementById('podium').innerHTML = podiumHTML; 
     document.getElementById('podium').style.display = 'flex'; 
+    if(sortedTeams.length >= 3) document.getElementById('podium').classList.add('multi-podium');
+    
     document.getElementById('podium-announcer').style.display = 'block';
 
     let revealSequence = [];
-    for (let i = sortedTeams.length - 1; i >= 0; i--) {
+    let rankNames = ["הראשון", "השני", "השלישי", "הרביעי"];
+    
+    let sortedRankKeys = Object.keys(groupedRanks).map(Number).sort((a,b) => b - a);
+
+    sortedRankKeys.forEach(rankKey => {
+        let teamsInRank = groupedRanks[rankKey];
+        let teamNames = teamsInRank.map(t => t.name).join(' ו-');
         let text = "";
-        if(sortedTeams[i].rank === 0) text = `ובמקום הראשון... ${sortedTeams[i].name}!!! 🏆`; 
-        else if(sortedTeams[i].rank === 1) text = `במקום השני... ${sortedTeams[i].name}!`; 
-        else if(sortedTeams[i].rank === 2) text = `במקום השלישי... ${sortedTeams[i].name}!`; 
-        else text = `במקום הרביעי... ${sortedTeams[i].name}!`;
+        let placeString = rankNames[rankKey] || "הבא";
+
+        if(teamsInRank.length > 1) {
+            text = rankKey === 0 ? `ובמקום ${placeString}... תיקו מטורף בין ${teamNames}!!! 🏆` : `ובמקום ${placeString}... תיקו בין ${teamNames}!`;
+        } else {
+            text = rankKey === 0 ? `ובמקום ${placeString}... ${teamNames}!!! 🏆` : `במקום ${placeString}... ${teamNames}!`;
+        }
         
-        revealSequence.push({ id: sortedTeams[i].id, text: text, isFirst: sortedTeams[i].rank === 0 });
-    }
+        revealSequence.push({ 
+            teamIds: teamsInRank.map(t => t.id), 
+            text: text, 
+            isFirst: rankKey === 0 
+        });
+    });
 
     let announcer = document.getElementById('podium-announcer');
     let delay = 1000;
@@ -1077,12 +1080,15 @@ function showEndScreen() {
         setTimeout(() => {
             announcer.innerText = step.text; 
             announcer.classList.add('pop-anim'); 
-            document.getElementById(`podium-rank-${step.id}`).classList.add('revealed');
+            
+            step.teamIds.forEach(id => {
+                let el = document.getElementById(`podium-rank-${id}`);
+                if(el) el.classList.add('revealed');
+            });
             
             if (step.isFirst) {
                 playVictorySound(); 
                 fireConfetti();
-                // ממתינים קצת ואז מעלימים את הפודיום ומראים את המשוב והכפתורים
                 setTimeout(() => {
                     document.getElementById('podium').style.display = 'none';
                     document.getElementById('podium-announcer').style.display = 'none';
@@ -1098,7 +1104,6 @@ function showEndScreen() {
     });
 }
 
-// כפתור המשחק החדש בסוף המשחק - מאפס הכל כולל חדר רשת
 function resetToMainMenu() {
     location.reload(); 
 }

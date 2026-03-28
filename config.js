@@ -2,7 +2,13 @@
 
 const gameConfig = {
     categories: [
-        { id: 'gen', title: '🎲 ידע כללי', file: 'questions/gen.js', icons: ['🌍','🚀','💡','⏰','💎','🎲','🧩','🔬','🧬','🔭','💻','⚡','🪐','🧪','🔋','📡','🦠','🧲','🗽','🗼'] },
+        { id: 'gen', title: '🎲 ידע כללי', icons: ['🌍','🚀','💡','⏰','💎','🎲','🧩','🔬','🧬','🔭','💻','⚡','🪐','🧪','🔋','📡','🦠','🧲','🗽','🗼'], subCategories: [
+            { id: 'gen_easy', title: 'פשוט (מתאים לילדים)', file: 'questions/gen_easy.js' },
+            { id: 'gen_normal', title: 'רגיל', file: 'questions/gen_normal.js' },
+            { id: 'gen_hard', title: 'קשה', file: 'questions/gen_hard.js' },
+            { id: 'gen_extreme', title: 'אתגר (ממש קשה!)', file: 'questions/gen_extreme.js' }
+        ]},
+        
         { id: 'kids', title: '🧸 ילדים (עד גיל 10)', file: 'questions/kids.js', icons: ['🧸','🎈','🦄','🐶','🐱','🐰','🐼','🐸','🐯','🦁','🐮','🐷','🐒','🐔','🐧','🐦','🐤','🍭','🍬','🍫','🪁','🚗','🚁','🎡'] },
         
         { id: 'elementary', title: '🎒 יסודי (כיתות ג\'-ו\')', icons: ['🎒','📚','✏️','🚌','🧠','🔬','🌍','📖','📐','💡'], subCategories: [

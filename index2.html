@@ -26,6 +26,9 @@
             flex-direction: column; box-sizing: border-box; overflow: hidden;
         }
 
+        /* --- הוספנו פה רק את העלמת השאלה של סוג המכשיר --- */
+        #device-selection-group { display: none !important; }
+
         body.mobile-mode { height: auto; min-height: 100vh; overflow-y: auto; overflow-x: hidden; }
         body.mobile-mode #game-container { height: auto; padding-bottom: 50px; }
         body.mobile-mode .card-face { font-size: min(10vw, 8vh); }
@@ -81,7 +84,6 @@
         .control-btn:active { transform: translateY(4px); box-shadow: 0 0 0 rgba(0,0,0,0); }
         .control-btn.muted { background: #ef5350; }
 
-        /* לוח תוצאות שמציג רק את התור הנוכחי */
         #scoreboard { 
             display: flex; justify-content: center; align-items: center; min-height: 8vh; 
             background: rgba(255,255,255,0.9); backdrop-filter: blur(10px); border-radius: 20px; 
@@ -176,13 +178,12 @@
         .star { font-size: 2.5rem; color: #ccc; cursor: pointer; transition: color 0.2s; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
         .star.active { color: #ffca28; }
 
-        /* --- פודיום מותאם לטלפון - מעלים הכל ומציג אחד אחד --- */
         @media (max-width: 600px) {
             #podium {
                 flex-direction: column; height: auto; align-items: center; justify-content: center; margin: 10px 0;
             }
             .podium-place {
-                display: none; /* מוסתר כברירת מחדל עד לתורו באנימציה */
+                display: none; 
                 width: 80%; height: auto !important; padding: 25px 15px; border-radius: 20px;
                 flex-direction: column; justify-content: center; transform: scale(0.5);
             }
@@ -358,7 +359,6 @@
     <script>
         window.qDB = window.qDB || {};
 
-        // --- מערכת פיירבייס ---
         const firebaseConfig = {
             apiKey: "AIzaSyD-YOSA2nOwB_knR7bPLLkZ93teAsspU_0",
             authDomain: "doubletriviaonline.firebaseapp.com",
@@ -370,7 +370,6 @@
         if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
         const db = firebase.database();
 
-        // --- פונקציית גלילה מותאמת אישית לטלפון ---
         function smoothScrollMobile(targetId) {
             setTimeout(() => {
                 const target = document.getElementById(targetId);
@@ -381,7 +380,6 @@
             }, 150);
         }
 
-        // --- מעקב ואנליטיקה ---
         if (!localStorage.getItem('trivia_user_id')) {
             localStorage.setItem('trivia_user_id', 'user_' + Math.random().toString(36).substr(2, 9));
             localStorage.setItem('trivia_visit_count', 0);
@@ -422,12 +420,12 @@
                 buildThemeButtons();
             } else { alert("שגיאה: קובץ ההגדרות לא נטען."); }
 
-            let savedDevice = sessionStorage.getItem('doubleTriviaDevice');
-            if (savedDevice) {
-                document.getElementById('device-selection-group').style.display = 'none';
-                document.getElementById('network-selection-group').style.display = 'block';
-                selectedDevice = savedDevice;
+            // --- הקוד שבוטל לחלוטין את שאלת סוג המכשיר ---
+            selectedDevice = window.innerWidth <= 768 ? 'mobile' : 'desktop';
+            if(selectedDevice === 'mobile') {
+                document.body.classList.add('mobile-mode');
             }
+            document.getElementById('network-selection-group').style.display = 'block';
 
             if (localStorage.getItem('savedTriviaGame')) {
                 document.getElementById('resume-btn').style.display = 'inline-block';
@@ -569,16 +567,6 @@
                     document.getElementById('resume-btn').style.display = 'inline-block'; 
                 }
             }
-        }
-
-        function selectDevice(dev) { 
-            document.querySelectorAll('#dev-desktop, #dev-mobile').forEach(b=>b.classList.remove('selected')); 
-            document.getElementById('dev-'+dev).classList.add('selected'); 
-            selectedDevice = dev; 
-            sessionStorage.setItem('doubleTriviaDevice', dev); 
-            document.getElementById('network-selection-group').style.display = 'block'; 
-            document.getElementById('network-selection-group').style.animation = 'fadeInDown 0.6s ease forwards'; 
-            smoothScrollMobile('network-selection-group');
         }
 
         function chooseNetwork(mode) {
@@ -876,13 +864,12 @@
         }
 
         function initGame(isResume = false) {
-            if(!selectedDevice) { alert("אנא בחרו מכשיר!"); return; }
+            // הוסר התנאי המבקש בחירת מכשיר ידנית
             if(!isResume && !window.qDB[selectedTheme]) { alert("שגיאה: קובץ השאלות לא נטען."); return; }
             
             initAudio(); 
             document.getElementById('start-screen').style.display = 'none'; 
             document.getElementById('game-container').style.display = 'flex';
-            if(selectedDevice === 'mobile') document.body.classList.add('mobile-mode');
             history.pushState(null, null, window.location.href);
 
             if (!isResume) {
@@ -979,7 +966,6 @@
             } 
         }
 
-        // לוח התוצאות מראה אך ורק את מי שמשחק
         function renderScoreboard() {
             const sb = document.getElementById('scoreboard'); 
             sb.innerHTML = '';
@@ -1398,25 +1384,31 @@
             logEventToSheets("סיים משחק 🏆", themeName, timeSpent, "-", `סיים בסך הכל ${finished} משחקים אי פעם`);
 
             let sortedTeams = [...teams].sort((a,b) => b.score - a.score); 
-            sortedTeams[0].rank = 0; 
+            let currentRank = 0;
             
-            for(let i=1; i<sortedTeams.length; i++) { 
-                if(sortedTeams[i].score === sortedTeams[i-1].score) {
-                    sortedTeams[i].rank = sortedTeams[i-1].rank; 
-                } else {
-                    sortedTeams[i].rank = i; 
+            for(let i=0; i<sortedTeams.length; i++) { 
+                if(i > 0 && sortedTeams[i].score < sortedTeams[i-1].score) {
+                    currentRank++;
                 }
+                sortedTeams[i].rank = currentRank; 
             }
             
-            let podiumHTML = '';
-            let placesStyles = ['p0', 'p1', 'p2', 'p3'];
+            let groupedRanks = {};
+            sortedTeams.forEach(t => {
+                if(!groupedRanks[t.rank]) groupedRanks[t.rank] = [];
+                groupedRanks[t.rank].push(t);
+            });
+
+            // סידור הפודיום הוויזואלי (ראשון באמצע)
             let displayOrder = [];
-            
-            if(teams.length === 1) displayOrder.push(sortedTeams[0]); 
-            else if(teams.length === 2) displayOrder.push(sortedTeams[1], sortedTeams[0]); 
-            else if(teams.length === 3) displayOrder.push(sortedTeams[1], sortedTeams[0], sortedTeams[2]); 
+            if(sortedTeams.length === 1) displayOrder.push(sortedTeams[0]); 
+            else if(sortedTeams.length === 2) displayOrder.push(sortedTeams[1], sortedTeams[0]); 
+            else if(sortedTeams.length === 3) displayOrder.push(sortedTeams[1], sortedTeams[0], sortedTeams[2]); 
             else displayOrder.push(sortedTeams[1], sortedTeams[0], sortedTeams[2], sortedTeams[3]);
 
+            let podiumHTML = '';
+            let placesStyles = ['p0', 'p1', 'p2', 'p3'];
+            
             displayOrder.forEach(t => {
                 let styleRank = t.rank > 3 ? 3 : t.rank;
                 let wrongs = t.wrongAnswers || 0;
@@ -1432,15 +1424,29 @@
             document.getElementById('podium-announcer').style.display = 'block';
 
             let revealSequence = [];
-            for (let i = sortedTeams.length - 1; i >= 0; i--) {
+            let rankNames = ["הראשון", "השני", "השלישי", "הרביעי"];
+            
+            let sortedRankKeys = Object.keys(groupedRanks).map(Number).sort((a,b) => b - a);
+
+            // יצירת טקסט ההכרזה - כולל טיפול בתיקו
+            sortedRankKeys.forEach(rankKey => {
+                let teamsInRank = groupedRanks[rankKey];
+                let teamNames = teamsInRank.map(t => t.name).join(' ו-');
                 let text = "";
-                if(sortedTeams[i].rank === 0) text = `ובמקום הראשון... ${sortedTeams[i].name}!!! 🏆`; 
-                else if(sortedTeams[i].rank === 1) text = `במקום השני... ${sortedTeams[i].name}!`; 
-                else if(sortedTeams[i].rank === 2) text = `במקום השלישי... ${sortedTeams[i].name}!`; 
-                else text = `במקום הרביעי... ${sortedTeams[i].name}!`;
+                let placeString = rankNames[rankKey] || "הבא";
+
+                if(teamsInRank.length > 1) {
+                    text = rankKey === 0 ? `ובמקום ${placeString}... תיקו מטורף בין ${teamNames}!!! 🏆` : `ובמקום ${placeString}... תיקו בין ${teamNames}!`;
+                } else {
+                    text = rankKey === 0 ? `ובמקום ${placeString}... ${teamNames}!!! 🏆` : `במקום ${placeString}... ${teamNames}!`;
+                }
                 
-                revealSequence.push({ id: sortedTeams[i].id, text: text, isFirst: sortedTeams[i].rank === 0 });
-            }
+                revealSequence.push({ 
+                    teamIds: teamsInRank.map(t => t.id), 
+                    text: text, 
+                    isFirst: rankKey === 0 
+                });
+            });
 
             let announcer = document.getElementById('podium-announcer');
             let delay = 1000;
@@ -1457,11 +1463,13 @@
                         });
                     }
                     
-                    let currPlace = document.getElementById(`podium-rank-${step.id}`);
-                    if (currPlace) {
-                        currPlace.style.display = 'flex';
-                        setTimeout(() => currPlace.classList.add('revealed'), 50);
-                    }
+                    step.teamIds.forEach(id => {
+                        let currPlace = document.getElementById(`podium-rank-${id}`);
+                        if (currPlace) {
+                            currPlace.style.display = 'flex';
+                            setTimeout(() => currPlace.classList.add('revealed'), 50);
+                        }
+                    });
                     
                     if (step.isFirst) {
                         playVictorySound(); 
