@@ -4,6 +4,15 @@ const gameConfig = {
     categories: [
         { id: 'gen', title: '🎲 ידע כללי', file: 'questions/gen.js', icons: ['🌍','🚀','💡','⏰','💎','🎲','🧩','🔬','🧬','🔭','💻','⚡','🪐','🧪','🔋','📡','🦠','🧲','🗽','🗼'] },
         { id: 'kids', title: '🧸 ילדים (עד גיל 10)', file: 'questions/kids.js', icons: ['🧸','🎈','🦄','🐶','🐱','🐰','🐼','🐸','🐯','🦁','🐮','🐷','🐒','🐔','🐧','🐦','🐤','🍭','🍬','🍫','🪁','🚗','🚁','🎡'] },
+        
+        { id: 'elementary', title: '🎒 יסודי (כיתות ג\'-ו\')', icons: ['🎒','📚','✏️','🚌','🧠','🔬','🌍','📖','📐','💡'], subCategories: [
+            { id: 'elementary_mixed', title: 'מעורבב', file: 'questions/elementary_mixed.js' },
+            { id: 'elementary_science', title: 'מדעים וטבע', file: 'questions/elementary_science.js' },
+            { id: 'elementary_geohistory', title: 'גאוגרפיה והיסטוריה', file: 'questions/elementary_geohistory.js' },
+            { id: 'elementary_language', title: 'שפה וספרות', file: 'questions/elementary_language.js' },
+            { id: 'elementary_math', title: 'מתמטיקה והיגיון', file: 'questions/elementary_math.js' }
+        ]},
+
         { id: 'evolution', title: '🧬 אבולוציה', file: 'questions/evolution.js', icons: ['🧬','🐒','🌍','🦖','🦕','🦴','🌿','🦠','🔬','👣','🐟','🐸','🦧','🦍','🦅','🐢','🦎'] },
         
         { id: 'physics', title: '🧲 פיזיקה', icons: ['🧲','⚡','💡','🔭','🚀','🍎','🍏','📉','📈','📏','📐','⚛️','🔋'], subCategories: [
