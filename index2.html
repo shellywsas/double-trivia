@@ -28,7 +28,6 @@
             flex-direction: column; box-sizing: border-box; overflow: hidden;
         }
 
-        /* מעלים את שאלת המכשיר כי המערכת מזהה לבד */
         #device-selection-group { display: none !important; }
 
         body.mobile-mode { height: auto; min-height: 100vh; overflow-y: auto; overflow-x: hidden; }
@@ -85,7 +84,6 @@
         .control-btn:active { transform: translateY(4px); box-shadow: 0 0 0 rgba(0,0,0,0); }
         .control-btn.muted { background: #ef5350; }
 
-        /* לוח תוצאות שמציג רק את התור הנוכחי */
         #scoreboard { 
             display: flex; justify-content: center; align-items: center; min-height: 8vh; 
             background: rgba(255,255,255,0.9); backdrop-filter: blur(10px); border-radius: 20px; 
@@ -181,7 +179,6 @@
         .star { font-size: 2.5rem; color: #ccc; cursor: pointer; transition: color 0.2s; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
         .star.active { color: #ffca28; }
 
-        /* --- התיקון המשופר לפודיום בטלפון וללוח --- */
         @media (max-width: 768px) {
             #game-board {
                 grid-template-columns: repeat(4, 1fr) !important;
@@ -225,7 +222,6 @@
             .team-stats-podium { display: none !important; }
             #podium-announcer { font-size: 1.8rem !important; height: auto !important; min-height: 3rem; margin-bottom: 10px; }
             
-            /* כיווץ נוסף של מסך הסיום בנייד כדי שיכנס הכל יפה */
             #feedback-section { padding: 10px; margin-top: 5px; }
             .star { font-size: 2rem; }
             #feedback-input { margin-bottom: 5px; }
@@ -330,6 +326,7 @@
                 <li>המשחק מתנהל בתורות. בחרו 2 קלפים לפי האותיות והמספרים.</li>
                 <li>מצאתם זוג? תענו על שאלת טריוויה! יש נושאים עם 15 שניות ונושאים רציניים עם 30 שניות. עניתם נכון? תקבלו <b>נקודה</b>!</li>
                 <li>טעיתם? הזוג נסגר ותראה לכם התשובה הנכונה. <b>השאלה נשרפת!</b> בנושאים רציניים, השאלה תישאר על המסך עד שתלחצו על לחצן היציאה כדי שתוכלו ללמוד.</li>
+                <li><b>רצף:</b> 3 תשובות נכונות ברצף יפעילו אנימציית אש מיוחדת על המסך! 🔥</li>
                 <li><b>גלגל הצלה:</b> קבוצה שטועה 5 פעמים ברצף, תקבל בשאלה הבאה זמן בלתי מוגבל (∞)!</li>
             </ul>
             
@@ -463,11 +460,9 @@
                 buildThemeButtons();
             } else { alert("שגיאה: קובץ ההגדרות לא נטען."); }
 
-            // זיהוי אוטומטי של המכשיר
             selectedDevice = window.innerWidth <= 768 ? 'mobile' : 'desktop';
             if(selectedDevice === 'mobile') document.body.classList.add('mobile-mode');
             
-            // דילוג ישר למסך הרשת
             document.getElementById('network-selection-group').style.display = 'block';
 
             if (localStorage.getItem('savedTriviaGame')) {
@@ -483,7 +478,6 @@
             }
         });
 
-        // איפוס מלא של הבחירות ההתחלתיות - אף כפתור לא לחוץ מראש
         let selectedDevice = null, selectedTheme = null, selectedPairs = null, gameMode = null;
         
         let activeTeamId = 1, cards = [], flippedCards = [], activePair = [];
@@ -539,7 +533,7 @@
                     btn.onclick = (e) => selectSubTheme(sub, e.target);
                     subContainer.appendChild(btn); 
                 });
-                selectedTheme = null; // חייבים לבחור תת נושא
+                selectedTheme = null; 
             } else {
                 subGroup.style.display = 'none'; 
                 selectedTheme = category.id;
@@ -686,9 +680,10 @@
             botMemoryProb = mProb; 
         }
 
+        // === התיקון שהוספתי: ערבוב כפול של השאלות! ===
         function prepareShuffledQuestionsData() {
             let rawQs = window.qDB[selectedTheme] ? JSON.parse(JSON.stringify(window.qDB[selectedTheme].q)) : [];
-            shuffle(rawQs);
+            shuffle(rawQs); // ערבוב ראשון
             let safeQs = [];
             rawQs.forEach(q => {
                 if(q && q.length > 0) {
@@ -707,7 +702,7 @@
                     });
                 }
             });
-            return safeQs;
+            return shuffle(safeQs); // ערבוב שני ואחרון!
         }
 
         function sendOnlineEvent(type, payload) {
@@ -724,7 +719,6 @@
             let btn = document.querySelector('#host-action-group .start-btn'); 
             if (btn.disabled) return;
 
-            // אזהרות ביצירת חדר אונליין
             if (!selectedTheme) { alert("היי! שכחת לבחור נושא למשחק 📚"); return; }
             if (!selectedPairs) { alert("היי! שכחת לבחור כמות זוגות 🃏"); return; }
 
@@ -914,7 +908,6 @@
 
         function initGame(isResume = false) {
             
-            // מנגנון הבדיקה והאזהרות לפני התחלת משחק
             if (!isResume) {
                 if (!gameMode) { alert("היי! שכחת לבחור כמה משחקים/ות 🧑‍🤝‍🧑"); return; }
                 if (!selectedTheme) { alert("היי! שכחת לבחור נושא למשחק 📚"); return; }
@@ -1020,6 +1013,7 @@
                 const j = Math.floor(Math.random() * (i + 1)); 
                 [array[i], array[j]] = [array[j], array[i]]; 
             } 
+            return array;
         }
 
         function renderScoreboard() {
@@ -1142,7 +1136,6 @@
                 
                 if (isOnlineNetwork && activeTeamId !== myTeamId) btn.style.pointerEvents = 'none'; 
                 
-                // התיקון שמונע לחיצה כשהבוט עונה
                 if (gameMode === 'bot' && activeTeamId === 2) btn.style.pointerEvents = 'none';
                 
                 grid.appendChild(btn);
@@ -1532,7 +1525,6 @@
                         playVictorySound(); 
                         fireConfetti();
                         setTimeout(() => {
-                            // התיקון להעלמת הפודיום: הפודיום מוסתר תמיד אחרי האנימציה בכל המכשירים
                             document.getElementById('podium').style.display = 'none';
                             document.getElementById('podium-announcer').style.display = 'none';
                             
